@@ -8,6 +8,7 @@ import { AppResolver } from './app.resolver';
 import { MemberModule } from './components/member/member.module';
 import { T } from './libs/types/common';
 import { PropertyModule } from './components/property/property.module';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 @Module({
 	imports: [
@@ -17,6 +18,7 @@ import { PropertyModule } from './components/property/property.module';
 			playground: true,
 			uploads: false,
 			autoSchemaFile: true,
+			resolvers: { JSONObject: GraphQLJSONObject },
 			formatError: (error: T) => {
 				const graphqlFormatedError = {
 					code: error?.extensions?.code,

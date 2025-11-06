@@ -20,6 +20,9 @@ export class Property {
 	@Field(() => Number)
 	roombasePrice: number;
 
+	@Field(() => Number, { nullable: true })
+	roomDiscountPrice?: number;
+
 	@Field(() => String)
 	roombedInfo: string;
 

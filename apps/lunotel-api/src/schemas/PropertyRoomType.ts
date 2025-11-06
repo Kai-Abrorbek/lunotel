@@ -26,6 +26,12 @@ const PropertyRoomTypeSchema = new Schema(
 			required: true,
 		},
 
+		roomDiscountPrice: {
+			type: Number,
+			required: false,
+			min: 0,
+		},
+
 		roombedInfo: {
 			type: String,
 		},
@@ -40,7 +46,8 @@ const PropertyRoomTypeSchema = new Schema(
 		},
 
 		roomStatus: {
-			type: RoomStatus,
+			type: String,
+			enum: Object.values(RoomStatus),
 			default: RoomStatus.DRAFT,
 		},
 	},

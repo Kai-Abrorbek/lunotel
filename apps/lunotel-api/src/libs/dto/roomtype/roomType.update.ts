@@ -23,6 +23,10 @@ export class PropertyUpdate {
 	roombasePrice?: number;
 
 	@IsOptional()
+	@Field(() => Int, { nullable: true })
+	roomDiscountPrice?: number;
+
+	@IsOptional()
 	@Length(5, 100)
 	@Field(() => String, { nullable: true })
 	roombedInfo?: string;
