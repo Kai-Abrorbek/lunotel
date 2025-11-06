@@ -72,11 +72,6 @@ const MemberSchema = new Schema(
 			default: 0,
 		},
 
-		memberLikes: {
-			type: Number,
-			default: 0,
-		},
-
 		memberRank: {
 			type: Number,
 			default: 0,

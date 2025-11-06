@@ -19,6 +19,10 @@ export class MemberUpdate {
 	memberPhone?;
 
 	@IsOptional()
+	@Field(() => String, { nullable: true })
+	memberEmail?;
+
+	@IsOptional()
 	@Length(5, 12)
 	@Field(() => String, { nullable: true })
 	memberPassword?;

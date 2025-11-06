@@ -7,6 +7,7 @@ import { ApolloDriver } from '@nestjs/apollo';
 import { AppResolver } from './app.resolver';
 import { MemberModule } from './components/member/member.module';
 import { T } from './libs/types/common';
+import { PropertyModule } from './components/property/property.module';
 
 @Module({
 	imports: [
@@ -30,6 +31,7 @@ import { T } from './libs/types/common';
 			},
 		}),
 		MemberModule,
+		PropertyModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],
