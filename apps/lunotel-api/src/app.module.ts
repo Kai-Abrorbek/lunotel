@@ -6,6 +6,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver } from '@nestjs/apollo';
 import { AppResolver } from './app.resolver';
 import { MemberModule } from './components/member/member.module';
+import { T } from './libs/types/common';
 
 @Module({
 	imports: [
@@ -15,6 +16,18 @@ import { MemberModule } from './components/member/member.module';
 			playground: true,
 			uploads: false,
 			autoSchemaFile: true,
+			formatError: (error: T) => {
+				const graphqlFormatedError = {
+					code: error?.extensions?.code,
+					message:
+						error?.extensions?.originalError?.message ||
+						error?.message ||
+						error?.extensions?.exception?.respone.message ||
+						error?.extensions?.respone?.message,
+				};
+				console.log('GRAPHQL GLOBAL ERR: ', graphqlFormatedError);
+				return graphqlFormatedError;
+			},
 		}),
 		MemberModule,
 	],
