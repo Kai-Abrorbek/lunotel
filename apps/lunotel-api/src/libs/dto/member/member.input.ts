@@ -30,6 +30,10 @@ export class SignupInput {
 	memberType: MemberType;
 
 	@IsOptional()
+	@Field(() => String, { nullable: true })
+	memberImage?: String;
+
+	@IsOptional()
 	@Field(() => MemberStatus, { nullable: true })
 	memberStatus: MemberStatus;
 }

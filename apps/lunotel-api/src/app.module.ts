@@ -9,6 +9,7 @@ import { MemberModule } from './components/member/member.module';
 import { T } from './libs/types/common';
 import { PropertyModule } from './components/property/property.module';
 import { GraphQLJSONObject } from 'graphql-type-json';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
 	imports: [
@@ -18,22 +19,24 @@ import { GraphQLJSONObject } from 'graphql-type-json';
 			playground: true,
 			uploads: false,
 			autoSchemaFile: true,
-			resolvers: { JSONObject: GraphQLJSONObject },
+			// resolvers: { JSONObject: GraphQLJSONObject },
 			formatError: (error: T) => {
-				const graphqlFormatedError = {
-					code: error?.extensions?.code,
-					message:
-						error?.extensions?.originalError?.message ||
-						error?.message ||
-						error?.extensions?.exception?.respone.message ||
-						error?.extensions?.respone?.message,
+				const response = error?.extensions?.originalError ?? error?.extensions?.exception?.response;
+
+				const rawMessages = response?.message ?? error?.extensions?.response?.message ?? error?.message;
+
+				const messages = Array.isArray(rawMessages) ? rawMessages : [rawMessages];
+
+				return {
+					code: error?.extensions?.code ?? 'INTERNAL_SERVER_ERROR',
+					message: messages.join(', '),
+					details: messages,
 				};
-				console.log('GRAPHQL GLOBAL ERR: ', graphqlFormatedError);
-				return graphqlFormatedError;
 			},
 		}),
 		MemberModule,
 		PropertyModule,
+		DatabaseModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

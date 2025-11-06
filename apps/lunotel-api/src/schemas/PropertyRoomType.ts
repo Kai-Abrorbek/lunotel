@@ -1,6 +1,4 @@
 import { Schema } from 'mongoose';
-import { PropertyLocation, PropertyStatus, PropertyType } from '../libs/enums/property.enum';
-import { Int } from '@nestjs/graphql';
 import { RoomStatus } from '../libs/enums/propertyRoomtype.enum';
 
 const PropertyRoomTypeSchema = new Schema(

@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:dev:batch": "nest start lunotel-batch --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/apps/lunotel-api/main",
+    "start:prod": "cross-env NODE_ENV=production node dist/apps/lunotel-api/main",
     "start:prod:batch": "node dist/apps/lunotel-batch/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
