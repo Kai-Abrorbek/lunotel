@@ -27,15 +27,11 @@ export class RoomTypeInput {
 	@IsOptional()
 	@IsInt()
 	@Field(() => Int, { nullable: true })
-	roomDiscountPrice: Number;
+	roomDiscountPrice?: Number;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
-	roombedInfo: String;
-
-	@IsNotEmpty()
-	@Field(() => [String])
-	roomAmenities: [String];
+	roombedInfo?: String;
 
 	@IsNotEmpty()
 	@Field(() => [String])

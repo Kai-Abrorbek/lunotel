@@ -38,6 +38,11 @@ export class PropertyUpdate {
 
 	@IsOptional()
 	@IsInt()
+	@Field(() => Int, { nullable: true })
+	propertyRooms?: number | any;
+
+	@IsOptional()
+	@IsInt()
 	@Min(1)
 	@Field(() => Int, { nullable: true })
 	propertyStars?: number;

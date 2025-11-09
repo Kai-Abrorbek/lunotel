@@ -1,7 +1,7 @@
 import { Schema } from 'mongoose';
 import { RoomStatus } from '../libs/enums/propertyRoomtype.enum';
 
-const PropertyRoomTypeSchema = new Schema(
+const RoomTypeSchema = new Schema(
 	{
 		propertyId: {
 			type: Schema.Types.ObjectId,
@@ -28,14 +28,12 @@ const PropertyRoomTypeSchema = new Schema(
 			type: Number,
 			required: false,
 			min: 0,
+			default: 0,
 		},
 
 		roombedInfo: {
 			type: String,
-		},
-
-		roomAmenities: {
-			type: [String],
+			default: '',
 		},
 
 		roomImages: {
@@ -52,6 +50,6 @@ const PropertyRoomTypeSchema = new Schema(
 	{ timestamps: true, collection: 'roomType' },
 );
 
-PropertyRoomTypeSchema.index({ roomName: 1, roombasePrice: 1 }, { unique: true });
+RoomTypeSchema.index({ roomName: 1, roombasePrice: 1 }, { unique: true });
 
-export default PropertyRoomTypeSchema;
+export default RoomTypeSchema;

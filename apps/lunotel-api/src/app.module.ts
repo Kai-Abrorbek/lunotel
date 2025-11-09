@@ -10,6 +10,7 @@ import { T } from './libs/types/common';
 import { PropertyModule } from './components/property/property.module';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { DatabaseModule } from './database/database.module';
+import { RoomtypeModule } from './components/roomtype/roomtype.module';
 
 @Module({
 	imports: [
@@ -37,6 +38,7 @@ import { DatabaseModule } from './database/database.module';
 		MemberModule,
 		PropertyModule,
 		DatabaseModule,
+		RoomtypeModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

@@ -4,10 +4,14 @@ import { ObjectId } from 'mongoose';
 import { RoomStatus } from '../../enums/propertyRoomtype.enum';
 
 @InputType()
-export class PropertyUpdate {
+export class RoomTypeUpdate {
 	@IsNotEmpty()
 	@Field(() => String)
 	_id: ObjectId;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	propertyId: ObjectId;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
