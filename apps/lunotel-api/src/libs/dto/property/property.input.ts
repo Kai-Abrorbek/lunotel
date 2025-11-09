@@ -166,12 +166,20 @@ export class AgentPropertiesInquiry {
 @InputType()
 class ALPIsearch {
 	@IsOptional()
-	@Field(() => PropertyStatus, { nullable: true })
-	propertyStatus?: PropertyStatus;
+	@Field(() => PropertyLocation, { nullable: true })
+	location?: PropertyLocation;
 
 	@IsOptional()
-	@Field(() => [PropertyLocation], { nullable: true })
-	propertyLocationList?: PropertyLocation[];
+	@Field(() => PropertyType, { nullable: true })
+	type?: PropertyType;
+
+	@IsOptional()
+	@Field(() => [Int], { nullable: true })
+	propertyStarsList?: number[];
+
+	@IsOptional()
+	@Field(() => PropertyStatus, { nullable: true })
+	propertyStatus?: PropertyStatus;
 }
 
 @InputType()

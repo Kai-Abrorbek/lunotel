@@ -76,7 +76,7 @@ export class PropertyService {
 		const search: T = {
 			_id: input._id,
 			memberId: memberId,
-			propertyStatus: PropertyStatus.DRAFT,
+			propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
 		};
 
 		if (propertyStatus === PropertyStatus.DELETE) input.deletedAt = new Date();
@@ -208,14 +208,15 @@ export class PropertyService {
 
 	/** ADMIN **/
 	public async getAllPropertiesByAdmin(memberId: ObjectId, input: AllPropertiesInquiry): Promise<Properties> {
-		const { propertyStatus, propertyLocationList } = input.search;
+		const { propertyStatus, location, propertyStarsList, type } = input.search;
 		const match: T = {};
 		const sort: T = { [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC };
 
 		if (propertyStatus) match.propertyStatus = propertyStatus;
-		if (propertyLocationList) match.propertyLocation = { $in: propertyLocationList };
+		if (location) match.propertyLocation = location;
+		if (propertyStarsList) match.propertyStars = { $in: propertyStarsList };
+		if (type) match.propertyType = type;
 
-		console.log(match);
 		const result = await this.propertyModel
 			.aggregate([
 				{ $match: match },
@@ -267,7 +268,6 @@ export class PropertyService {
 	}
 
 	public async removePropertyByAdmin(propertyId: ObjectId): Promise<Property> {
-		console.log(propertyId);
 		const search: T = { _id: propertyId, propertyStatus: PropertyStatus.DELETE };
 		const result: Property = await this.propertyModel.findOneAndDelete(search).exec();
 
