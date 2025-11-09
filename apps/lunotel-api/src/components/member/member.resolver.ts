@@ -78,6 +78,7 @@ export class MemberResolver {
 	@Mutation(() => Member)
 	public async updateMemberByAdmin(@Args('input') input: MemberUpdate): Promise<Member> {
 		console.log('Mutation: updateMemberByAdmin');
+		input._id = shapeIntoMongoObjectId(input._id);
 		return await this.memberService.updateMemberByAdmin(input);
 	}
 

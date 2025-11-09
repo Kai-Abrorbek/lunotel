@@ -8,6 +8,7 @@ import { Direction, Message } from '../../libs/enums/common.enum';
 import { MemberStatus } from '../../libs/enums/member.enum';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
 import { StatisticModifier, T } from '../../libs/types/common';
+import { relative } from 'path';
 
 @Injectable()
 export class MemberService {
@@ -89,7 +90,6 @@ export class MemberService {
 		if (memberStatus) match.memberStatus = memberStatus;
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
 
-		console.log('match : ', match);
 		const result = await this.memberModel
 			.aggregate([
 				{ $match: match },
@@ -111,7 +111,6 @@ export class MemberService {
 		if (input.memberPassword) {
 			input.memberPassword = await this.authService.hashPassword(input.memberPassword);
 		}
-
 		const result: Member = await this.memberModel.findOneAndUpdate({ _id: input._id }, input, { new: true }).exec();
 
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);

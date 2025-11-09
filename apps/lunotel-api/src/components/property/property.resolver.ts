@@ -91,7 +91,6 @@ export class PropertyResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Properties> {
 		console.log('Query: getAgentProperties');
-
 		return await this.propertyService.getAgentProperties(memberId, input);
 	}
 
