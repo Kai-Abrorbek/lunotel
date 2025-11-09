@@ -22,7 +22,12 @@ export class RoomTypeInput {
 	@IsNotEmpty()
 	@IsInt()
 	@Field(() => Int)
-	roombasePrice: Number;
+	basePriceOvernight: number;
+
+	@IsNotEmpty()
+	@IsInt()
+	@Field(() => Int)
+	basePriceDayUse: number;
 
 	@IsOptional()
 	@IsInt()

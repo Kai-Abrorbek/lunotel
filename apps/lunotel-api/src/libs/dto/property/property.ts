@@ -8,6 +8,8 @@ import {
 	PropertyType,
 } from '../../enums/property.enum';
 import { Member, TotalCounter } from '../member/member';
+import { RoomType } from '../roomtype/roomtype';
+import { StayPlan } from '../stayplan/stayplan';
 // import { MeLiked } from '../like/like';
 
 @ObjectType()
@@ -79,6 +81,11 @@ export class Property {
 	@Field(() => Member, { nullable: true })
 	memberData?: Member;
 
+	@Field(() => [RoomType], { nullable: true })
+	rooms?: RoomType[];
+
+	@Field(() => Int, { nullable: true })
+	roomCount?: number;
 	// @Field(() => [MeLiked], { nullable: true })
 	// meLiked?: MeLiked[];
 }

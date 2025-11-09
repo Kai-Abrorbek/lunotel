@@ -25,7 +25,12 @@ export class RoomTypeUpdate {
 	@IsOptional()
 	@IsInt()
 	@Field(() => Int, { nullable: true })
-	roombasePrice?: number;
+	basePriceDayUse?: number;
+
+	@IsOptional()
+	@IsInt()
+	@Field(() => Int, { nullable: true })
+	basePriceOvernight?: number;
 
 	@IsOptional()
 	@IsInt()

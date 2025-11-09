@@ -1,6 +1,7 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 import { RoomStatus } from '../../enums/propertyRoomtype.enum';
+import { StayPlan } from '../stayplan/stayplan';
 
 @ObjectType()
 export class RoomType {
@@ -17,7 +18,10 @@ export class RoomType {
 	roomCapacity: number;
 
 	@Field(() => Number)
-	roombasePrice: number;
+	basePriceDayUse: number;
+
+	@Field(() => Number)
+	basePriceOvernight: number;
 
 	@Field(() => Number, { nullable: true })
 	roomDiscountPrice: number;
@@ -36,4 +40,8 @@ export class RoomType {
 
 	@Field(() => Date)
 	updatedAt: Date;
+
+	/* from aggregatio */
+	@Field(() => [StayPlan], { nullable: true })
+	roomsPlans?: StayPlan[];
 }

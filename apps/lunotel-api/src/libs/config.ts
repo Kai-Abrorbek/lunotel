@@ -97,6 +97,15 @@ export const lookupMember = {
 	},
 };
 
+export const lookupRooms = {
+	$lookup: {
+		from: 'roomType',
+		localField: '_id',
+		foreignField: 'propertyId',
+		as: 'rooms',
+	},
+};
+
 export const lookupFollowingData = {
 	$lookup: {
 		from: 'members',

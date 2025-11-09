@@ -19,7 +19,12 @@ const RoomTypeSchema = new Schema(
 			required: true,
 		},
 
-		roombasePrice: {
+		basePriceDayUse: {
+			type: Number,
+			required: true,
+		},
+
+		basePriceOvernight: {
 			type: Number,
 			required: true,
 		},

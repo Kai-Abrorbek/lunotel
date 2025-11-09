@@ -5,9 +5,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import RoomTypeSchema from '../../schemas/PropertyRoomType';
 import { AuthModule } from '../auth/auth.module';
 import { PropertyModule } from '../property/property.module';
+import StayPlanSchema from '../../schemas/StayPlan.model';
 
 @Module({
-	imports: [MongooseModule.forFeature([{ name: 'RoomType', schema: RoomTypeSchema }]), AuthModule, PropertyModule],
+	imports: [
+		MongooseModule.forFeature([{ name: 'RoomType', schema: RoomTypeSchema }]),
+		MongooseModule.forFeature([{ name: 'StayPlan', schema: StayPlanSchema }]),
+		AuthModule,
+		PropertyModule,
+	],
 	providers: [RoomtypeService, RoomtypeResolver],
 })
 export class RoomtypeModule {}
