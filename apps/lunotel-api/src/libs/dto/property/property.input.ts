@@ -1,5 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsIn, IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
 import {
 	PropertyAmenity,
 	PropertyLocation,
@@ -33,24 +33,14 @@ export class PropertyInput {
 
 	@IsNotEmpty()
 	@Field(() => Int)
-	propertyPrice: number;
-
-	@IsNotEmpty()
-	@Field(() => Int)
 	propertyStars: number;
-
-	@IsNotEmpty()
-	@IsInt()
-	@Min(1)
-	@Field(() => Int)
-	propertyRooms: number;
 
 	@IsNotEmpty()
 	@Field(() => [String])
 	propertyImages: string[];
 
 	@IsNotEmpty()
-	@Field(() => [PropertyOtherAmenity])
+	@Field(() => [PropertyAmenity])
 	propertyAmenities: PropertyAmenity[];
 
 	@IsNotEmpty()
@@ -87,6 +77,23 @@ class PIsearch {
 	@IsOptional()
 	@Field(() => PropertyType, { nullable: true })
 	type?: PropertyType;
+
+	@IsOptional()
+	@Field(() => [Int], { nullable: true })
+	propertyStarsList?: number[];
+
+	@IsOptional()
+	@Field(() => [PropertyAmenity], { nullable: true })
+	amenityList?: PropertyAmenity[];
+
+	@IsOptional()
+	@Field(() => [PropertyOtherAmenity], { nullable: true })
+	otherAmenityList?: PropertyOtherAmenity[];
+
+	@IsOptional()
+	@IsBoolean()
+	@Field(() => Boolean, { nullable: true })
+	soldAt?: boolean;
 
 	@IsOptional()
 	@Field(() => PricesRange, { nullable: true })

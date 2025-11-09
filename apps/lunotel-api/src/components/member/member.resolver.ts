@@ -1,7 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { MemberService } from './member.service';
-import { Member } from '../../libs/dto/member/member';
-import { LoginInput, SignupInput } from '../../libs/dto/member/member.input';
+import { Member, Members } from '../../libs/dto/member/member';
+import { LoginInput, MembersInquiry, SignupInput } from '../../libs/dto/member/member.input';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
@@ -12,6 +12,9 @@ import { getSerialForImage, shapeIntoMongoObjectId, validMimeTypes } from '../..
 import { GraphQLUpload, FileUpload } from 'graphql-upload';
 import { Message } from '../../libs/enums/common.enum';
 import { createWriteStream } from 'fs';
+import { MemberType } from '../../libs/enums/member.enum';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Resolver()
 export class MemberResolver {
@@ -59,6 +62,23 @@ export class MemberResolver {
 
 		const targetId = shapeIntoMongoObjectId(input);
 		return await this.memberService.getMember(memberId, targetId);
+	}
+
+	/** ADMIN **/
+	@Roles(MemberType.ADMIN)
+	@UseGuards(RolesGuard)
+	@Query(() => Members)
+	public async getAllMembersByAdmin(@Args('input') input: MembersInquiry): Promise<Members> {
+		console.log('Mutation: getAllMembersByAdmin');
+		return await this.memberService.getAllMembersByAdmin(input);
+	}
+
+	@Roles(MemberType.ADMIN)
+	@UseGuards(RolesGuard)
+	@Mutation(() => Member)
+	public async updateMemberByAdmin(@Args('input') input: MemberUpdate): Promise<Member> {
+		console.log('Mutation: updateMemberByAdmin');
+		return await this.memberService.updateMemberByAdmin(input);
 	}
 
 	/** IMAGE UPLODER **/

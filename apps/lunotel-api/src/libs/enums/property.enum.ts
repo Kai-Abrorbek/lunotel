@@ -17,6 +17,7 @@ export enum PropertyStatus {
 	ACTIVE = 'ACTIVE',
 	INACTIVE = 'INACTIVE',
 	BLOCKED = 'BLOCKED',
+	DELETE = 'DELETE',
 }
 registerEnumType(PropertyStatus, {
 	name: 'PropertyStatus',
@@ -51,6 +52,20 @@ export enum PropertyAmenity {
 	KITCHEN = 'KITCHEN',
 	DRYER = 'DRYER',
 	DEHYDRATOR = 'DEHYDRATOR',
+	WIFI = 'WIFI',
+	NON_SMOKING = 'NON_SMOKING',
+	TV = 'TV',
+	CONDITIONER = 'AIR_CONDITIONER',
+	SHOWER_ROOM = 'SHOWER_ROOM',
+	FREE_PARKING = 'FREE_PARKING',
+	COFFEE_MACHINE = 'COFFEE_MACHINE',
+	PARKING = 'PARKING',
+	ELEVATOR = 'ELEVATOR',
+	SPA = 'SPA',
+	TWIN_BED = 'TWIN_BED',
+	KARAOKE = 'KARAOKE',
+	COUPLE_PC = 'COUPLE_PC',
+	GAMING_PC = 'GAMING_PC',
 }
 
 registerEnumType(PropertyAmenity, {

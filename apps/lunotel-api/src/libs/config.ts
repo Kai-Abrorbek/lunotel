@@ -2,14 +2,7 @@
 import { ObjectId } from 'bson';
 export const availableAgentSorts = ['createdAt', 'updatedAt', 'memberViews', 'memberLikes', 'memberRank'];
 export const availableMembersSorts = ['createdAt', 'updatedAt', 'memberViews', 'memberLikes'];
-export const availablePropertySorts = [
-	'createdAt',
-	'updatedAt',
-	'propertyViews',
-	'propertyLikes',
-	'propertyRank',
-	'propertyPrice',
-];
+export const availablePropertySorts = ['createdAt', 'updatedAt', 'propertyViews', 'propertyLikes', 'propertyRank'];
 export const availableBoardArticlesSorts = ['createdAt', 'updatedAt', 'articleLikes', 'articleViews'];
 export const availableCommentSorts = ['createdAt', 'updatedAt'];
 
@@ -17,9 +10,8 @@ export const availableCommentSorts = ['createdAt', 'updatedAt'];
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { T } from './types/common';
-import { pipeline } from 'stream';
 
-export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
 export const getSerialForImage = (filename: string) => {
 	const ext = path.parse(filename).ext;
 	return uuidv4() + ext;

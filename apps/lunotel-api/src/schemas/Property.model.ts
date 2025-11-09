@@ -6,6 +6,7 @@ import {
 	PropertyStatus,
 	PropertyType,
 } from '../libs/enums/property.enum';
+import { deflate } from 'zlib';
 
 const PropertySchema = new Schema(
 	{
@@ -37,9 +38,14 @@ const PropertySchema = new Schema(
 			required: true,
 		},
 
+		propertyPrice: {
+			type: Number,
+			default: 0,
+		},
+
 		propertyRooms: {
 			type: Number,
-			required: true,
+			default: 0,
 		},
 
 		propertyViews: {
@@ -73,11 +79,13 @@ const PropertySchema = new Schema(
 		},
 
 		propertyAmenities: {
-			type: [PropertyAmenity],
+			type: [String],
+			enum: [PropertyAmenity],
 		},
 
 		propertyOtherAmenities: {
-			type: [PropertyOtherAmenity],
+			type: [String],
+			enum: [PropertyOtherAmenity],
 		},
 
 		propertyDesc: {
@@ -88,6 +96,11 @@ const PropertySchema = new Schema(
 			type: Schema.Types.ObjectId,
 			required: true,
 			ref: 'Member',
+		},
+
+		soldAt: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	{ timestamps: true, collection: 'properties' },
