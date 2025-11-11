@@ -15,7 +15,10 @@ export class RoomType {
 	roomName: string;
 
 	@Field(() => Number)
-	roomCapacity: number;
+	roomMaxPersonal: number;
+
+	@Field(() => Number)
+	roomStandPersonal: number;
 
 	@Field(() => Number)
 	basePriceDayUse: number;
@@ -43,5 +46,8 @@ export class RoomType {
 
 	/* from aggregatio */
 	@Field(() => [StayPlan], { nullable: true })
-	roomsPlans?: StayPlan[];
+	stayPlans?: StayPlan[];
+
+	@Field(() => Int, { nullable: true })
+	roomCount?: number;
 }

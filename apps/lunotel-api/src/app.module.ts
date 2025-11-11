@@ -11,6 +11,8 @@ import { PropertyModule } from './components/property/property.module';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { DatabaseModule } from './database/database.module';
 import { RoomtypeModule } from './components/roomtype/roomtype.module';
+import { StayplanModule } from './components/stayplan/stayplan.module';
+import { InventoryModule } from './components/inventory/inventory.module';
 
 @Module({
 	imports: [
@@ -39,6 +41,8 @@ import { RoomtypeModule } from './components/roomtype/roomtype.module';
 		PropertyModule,
 		DatabaseModule,
 		RoomtypeModule,
+		StayplanModule,
+		InventoryModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

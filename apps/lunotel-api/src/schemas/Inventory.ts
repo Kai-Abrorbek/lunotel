@@ -43,6 +43,6 @@ const InventorySchema = new Schema(
 	},
 );
 
-InventorySchema.index({ roomTypeId: 1, stayPlanId: 1, date: 1 }, { unique: true });
+InventorySchema.index({ roomTypeId: 1, stayPlanId: 1, inventoryDate: 1 }, { unique: true });
 
 export default InventorySchema;

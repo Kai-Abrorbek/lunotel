@@ -11,6 +11,7 @@ import {
 	OrdinaryInquiry,
 	PropertiesInquiry,
 	PropertyInput,
+	PropertyInquiry,
 } from '../../libs/dto/property/property.input';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
@@ -37,10 +38,9 @@ export class PropertyResolver {
 
 	@UseGuards(WithoutGuard)
 	@Query((returns) => Property)
-	public async getProperty(@Args('propertyId') input: string, @AuthMember('_id') memberId): Promise<Property> {
+	public async getProperty(@Args('input') input: PropertyInquiry, @AuthMember('_id') memberId): Promise<Property> {
 		console.log('Query: getProperty');
-		const propertyId: ObjectId = shapeIntoMongoObjectId(input);
-		return await this.propertyService.getProperty(memberId, propertyId);
+		return await this.propertyService.getProperty(memberId, input);
 	}
 
 	@Roles(MemberType.AGENT)

@@ -1,11 +1,9 @@
 export const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_REGEX = /^\d{2}:\d{2}$/;
 
-export const isDateString = (value: unknown): value is string =>
-	typeof value === 'string' && DATE_REGEX.test(value);
+export const isDateString = (value: unknown): value is string => typeof value === 'string' && DATE_REGEX.test(value);
 
-export const isTimeString = (value: unknown): value is string =>
-	typeof value === 'string' && TIME_REGEX.test(value);
+export const isTimeString = (value: unknown): value is string => typeof value === 'string' && TIME_REGEX.test(value);
 
 export const formatDateString = (value: Date | string): string => {
 	if (value instanceof Date) {
@@ -43,4 +41,18 @@ export const formatTimeString = (value: Date | string): string => {
 	}
 
 	throw new Error('Invalid time value');
+};
+
+export const getNextMonthsDates = (month: number) => {
+	const dates = [];
+	const today = new Date();
+	const limit = new Date();
+	limit.setMonth(limit.getMonth() + month);
+
+	let d = new Date(today);
+	while (d <= limit) {
+		dates.push(d.toISOString().slice(0, 10)); // "YYYY-MM-DD"
+		d.setDate(d.getDate() + 1);
+	}
+	return dates;
 };

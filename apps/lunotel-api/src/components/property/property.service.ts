@@ -7,18 +7,33 @@ import {
 	AllPropertiesInquiry,
 	PropertiesInquiry,
 	PropertyInput,
+	PropertyInquiry,
 } from '../../libs/dto/property/property.input';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { MemberService } from '../member/member.service';
 import { StatisticModifier, T } from '../../libs/types/common';
 import { PropertyStatus } from '../../libs/enums/property.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
-import { lookupAuthMemberLiked, lookupMember, lookupRooms, shapeIntoMongoObjectId } from '../../libs/config';
+import {
+	lookupAuthMemberLiked,
+	lookupInventory,
+	lookupMember,
+	lookupRooms,
+	shapeIntoMongoObjectId,
+} from '../../libs/config';
+import { RoomType } from '../../libs/dto/roomtype/roomtype';
+import { StayPlan } from '../../libs/dto/stayplan/stayplan';
+import { Inventory } from '../../libs/dto/inventory/inventory';
+import { Member } from '../../libs/dto/member/member';
 
 @Injectable()
 export class PropertyService {
 	constructor(
 		@InjectModel('Property') private readonly propertyModel: Model<Property>,
+		@InjectModel('RoomType') private readonly roomTypeModel: Model<RoomType>,
+		@InjectModel('StayPlan') private readonly stayPlanModel: Model<StayPlan>,
+		@InjectModel('Inventory') private readonly inventoryModel: Model<Inventory>,
+		@InjectModel('Member') private readonly memberModel: Model<Member>,
 		private readonly memberService: MemberService,
 	) {}
 
@@ -41,88 +56,193 @@ export class PropertyService {
 		}
 	}
 
-	public async getProperty(memberId: ObjectId, propertyId: ObjectId): Promise<Property> {
-		const match: T = {
-			_id: propertyId,
-			propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
+	public async getProperty(memberId: ObjectId, input: PropertyInquiry): Promise<Property> {
+		const propertyId = shapeIntoMongoObjectId(input._id);
+
+		const startDate = input.checkInDate;
+		const endDate = input.checkOutDate;
+		const dateFilter = startDate && endDate ? { inventoryDate: { $gte: startDate, $lt: endDate } } : {};
+
+		const property = await this.propertyModel
+			.findOne({
+				_id: propertyId,
+				propertyName: input.propertyName,
+				propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
+			})
+			.lean();
+
+		if (!property) {
+			throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		}
+
+		const memberData = await this.memberModel.findById(property.memberId).lean();
+		const rooms = await this.roomTypeModel
+			.find({ propertyId: propertyId, roomMaxPersonal: { $gte: input.personal } })
+			.lean();
+		const stayPlans = await this.stayPlanModel
+			.find({
+				roomTypeId: { $in: rooms.map((room) => room._id) },
+			})
+			.lean();
+
+		const inventories = await this.inventoryModel
+			.find({
+				roomTypeId: { $in: rooms.map((r) => r._id) },
+				stayPlanId: { $in: stayPlans.map((plan) => plan._id) },
+				...dateFilter,
+			})
+			.lean();
+
+		const roomsWithPlans = rooms.map((room) => {
+			const plansForRoom = stayPlans
+				.filter((plan) => plan.roomTypeId.toString() === room._id.toString())
+				.map((plan) => {
+					const invForPlan = inventories.filter((inv) => inv.stayPlanId.toString() === plan._id.toString());
+
+					return {
+						_id: plan._id,
+						roomTypeId: plan.roomTypeId,
+						stayPlanType: plan.stayPlanType,
+						stayPlanName: plan.stayPlanName,
+						stayPlanBasePrice: plan.stayPlanBasePrice,
+						stayPlanRules: plan.stayPlanRules,
+						stayPlanstatus: plan.stayPlanstatus,
+						createdAt: plan.createdAt,
+						updatedAt: plan.updatedAt,
+						inventories: invForPlan.map((inv) => ({
+							_id: inv._id,
+							roomTypeId: inv.roomTypeId,
+							stayPlanId: inv.stayPlanId,
+							inventoryDate: inv.inventoryDate,
+							inventoryAllotment: inv.inventoryAllotment,
+							inventoryPrice: inv.inventoryPrice,
+							inventoryStatus: inv.inventoryStatus,
+							createdAt: inv.createdAt,
+							updatedAt: inv.updatedAt,
+						})),
+					};
+				});
+
+			return {
+				...room,
+				roomCount: rooms.length,
+				stayPlans: plansForRoom,
+			};
+		});
+
+		return {
+			...property,
+			memberData: memberData || null,
+			rooms: roomsWithPlans,
+			roomsCount: roomsWithPlans.length,
 		};
-
-		const targetProperty = await this.propertyModel
-			.aggregate([
-				{ $match: match },
-				{ $sort: { createdAt: 1 } },
-				{
-					$facet: {
-						list: [
-							lookupRooms,
-							{
-								$unwind: {
-									path: '$rooms',
-									preserveNullAndEmptyArrays: true,
-								},
-							},
-							{
-								$lookup: {
-									from: 'stayPlan',
-									let: { roomId: '$rooms._id' },
-									pipeline: [{ $match: { $expr: { $eq: ['$roomTypeId', '$$roomId'] } } }],
-									as: 'rooms.roomsPlans',
-								},
-							},
-							{
-								$group: {
-									_id: '$_id',
-									doc: { $first: '$$ROOT' },
-									rooms: { $push: '$rooms' },
-								},
-							},
-							{
-								$replaceRoot: {
-									newRoot: {
-										$mergeObjects: ['$doc', { rooms: '$rooms' }],
-									},
-								},
-							},
-							{
-								$addFields: {
-									roomCount: { $size: { $ifNull: ['$rooms', []] } },
-								},
-							},
-							lookupMember,
-							{
-								$unwind: {
-									path: '$memberData',
-									preserveNullAndEmptyArrays: true,
-								},
-							},
-						],
-					},
-				},
-			])
-			.exec();
-
-		if (!targetProperty.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
-
-		// if (memberId) {
-		// 	const viewInput = { memberId: memberId, viewRefId: propertyId, viewGroup: ViewGroup.PROPERTY };
-		// 	const newView = await this.viewService.recordView(viewInput);
-
-		// 	if (newView) {
-		// 		await this.propertyStatsEditor({ _id: propertyId, targetKey: 'propertyViews', modifier: 1 });
-		// 		targerProperty.propertyViews++;
-		// 	}
-
-		// 	const likeInput: LikeInput = {
-		// 		memberId: memberId,
-		// 		likeRefId: propertyId,
-		// 		likeGroup: LikeGroup.PROPERTY,
-		// 	};
-		// 	targerProperty.meLiked = await this.likeService.checkLikeExistence(likeInput);
-		// }
-
-		// targerProperty.memberData = await this.memberService.getMember(null, targerProperty.memberId);
-		return targetProperty[0].list[0];
 	}
+
+	// public async getProperty(memberId: ObjectId, input: PropertyInquiry): Promise<Property> {
+	// 	const match: T = {
+	// 		_id: shapeIntoMongoObjectId(input._id),
+	// 		propertyName: input.propertyName,
+	// 		propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
+	// 	};
+
+	// 	const targetProperty = await this.propertyModel
+	// 		.aggregate([
+	// 			{ $match: match },
+	// 			{ $sort: { createdAt: 1 } },
+	// 			{
+	// 				$lookup: {
+	// 					from: 'roomType',
+	// 					localField: '_id',
+	// 					foreignField: 'propertyId',
+	// 					pipeline: [
+	// 						// (선택) 룸 상태 필터
+	// 						// { $match: { roomStatus: { $in: ['ACTIVE','DRAFT'] } } },
+
+	// 						// 1-1) 각 roomType에 stayPlans 붙이기
+	// 						{
+	// 							$lookup: {
+	// 								from: 'stayPlan',
+	// 								localField: '_id',
+	// 								foreignField: 'roomTypeId',
+	// 								pipeline: [
+	// 									// 1-2) 각 stayPlan에 inventories(날짜 범위) 붙이기
+	// 									{
+	// 										$lookup: {
+	// 											from: 'inventory',
+	// 											let: {
+	// 												planId: '$_id',
+	// 												roomId: '$roomTypeId',
+	// 												fromDate: input.checkInDate,
+	// 												toDate: input.checkOutDate,
+	// 											},
+	// 											pipeline: [
+	// 												{
+	// 													$match: {
+	// 														$expr: {
+	// 															$and: [
+	// 																{ $eq: ['$stayPlanId', '$$planId'] },
+	// 																{ $eq: ['$roomTypeId', '$$roomId'] },
+	// 																// 날짜 범위: [fromDate, toDate)
+	// 																{ $gte: ['$inventoryDate', '$$fromDate'] },
+	// 																{ $lt: ['$inventoryDate', '$$toDate'] },
+	// 															],
+	// 														},
+	// 													},
+	// 												},
+	// 												{
+	// 													$project: {
+	// 														_id: 1,
+	// 														inventoryDate: 1,
+	// 														inventoryAllotment: 1,
+	// 														inventoryStatus: 1,
+	// 														price: 1,
+	// 													},
+	// 												},
+	// 												{ $sort: { inventoryDate: 1 } },
+	// 											],
+	// 											as: 'inventories',
+	// 										},
+	// 									},
+	// 								],
+	// 								as: 'stayPlans',
+	// 							},
+	// 						},
+	// 					],
+	// 					as: 'rooms',
+	// 				},
+	// 			},
+
+	// 			// 2) roomCount 등 파생 필드
+	// 			{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
+
+	// 			// 3) member join
+	// 			lookupMember,
+	// 			{ $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
+	// 		])
+	// 		.exec();
+
+	// 	if (!targetProperty.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+	// 	// if (memberId) {
+	// 	// 	const viewInput = { memberId: memberId, viewRefId: propertyId, viewGroup: ViewGroup.PROPERTY };
+	// 	// 	const newView = await this.viewService.recordView(viewInput);
+
+	// 	// 	if (newView) {
+	// 	// 		await this.propertyStatsEditor({ _id: propertyId, targetKey: 'propertyViews', modifier: 1 });
+	// 	// 		targerProperty.propertyViews++;
+	// 	// 	}
+
+	// 	// 	const likeInput: LikeInput = {
+	// 	// 		memberId: memberId,
+	// 	// 		likeRefId: propertyId,
+	// 	// 		likeGroup: LikeGroup.PROPERTY,
+	// 	// 	};
+	// 	// 	targerProperty.meLiked = await this.likeService.checkLikeExistence(likeInput);
+	// 	// }
+
+	// 	// targerProperty.memberData = await this.memberService.getMember(null, targerProperty.memberId);
+	// 	return targetProperty[0];
+	// }
 
 	public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
 		let { propertyStatus, deletedAt } = input;

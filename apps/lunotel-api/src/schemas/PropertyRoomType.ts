@@ -14,7 +14,12 @@ const RoomTypeSchema = new Schema(
 			required: true,
 		},
 
-		roomCapacity: {
+		roomMaxPersonal: {
+			type: Number,
+			required: true,
+		},
+
+		roomStandPersonal: {
 			type: Number,
 			required: true,
 		},

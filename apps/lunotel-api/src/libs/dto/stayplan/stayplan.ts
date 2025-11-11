@@ -3,6 +3,7 @@ import { ObjectId } from 'mongoose';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { StayPlanStatus, StayPlanType } from '../../enums/stayplan.enum';
 import { TotalCounter } from '../member/member';
+import { Inventory } from '../inventory/inventory';
 
 @ObjectType()
 export class StayPlan {
@@ -32,6 +33,10 @@ export class StayPlan {
 
 	@Field(() => Date)
 	updatedAt: Date;
+
+	/* from aggregatio */
+	@Field(() => [Inventory], { nullable: true })
+	inventories?: Inventory[];
 }
 
 @ObjectType()

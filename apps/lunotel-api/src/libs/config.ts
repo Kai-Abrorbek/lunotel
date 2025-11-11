@@ -88,11 +88,54 @@ export const lookupAuthMemberFollowed = (input: LookupAuthMemberFollowed) => {
 	};
 };
 
+interface LookupInventory {
+	roomTypeId: ObjectId;
+	stayPlanId: ObjectId;
+	inventoryDate: string;
+	// personal: number;
+}
+
+export const lookupInventory = (input: LookupInventory) => {
+	const { roomTypeId, stayPlanId, inventoryDate } = input;
+	return {
+		$lookup: {
+			from: 'inventory',
+			let: {
+				localRoomTypeId: roomTypeId,
+				localStayPlanId: stayPlanId,
+				localInventoryDate: inventoryDate,
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{ $eq: ['$roomTypeId', '$$localRoomTypeId'] },
+								{ $eq: ['$stayPlanId', '$$localStayPlanId'] },
+								{ $eq: ['$inventoryDate', '$$localInventoryDate'] },
+							],
+						},
+					},
+				},
+				{
+					$project: {
+						_id: 0,
+						roomTypeId: 1,
+						stayPlanId: 1,
+						inventoryDate: 1,
+					},
+				},
+			],
+			as: 'inventory',
+		},
+	};
+};
+
 export const lookupMember = {
 	$lookup: {
 		from: 'members',
-		localField: 'memberId',
-		foreignField: '_id',
+		localField: 'memberId', //property.memberId
+		foreignField: '_id', // member._id
 		as: 'memberData',
 	},
 };
@@ -100,8 +143,8 @@ export const lookupMember = {
 export const lookupRooms = {
 	$lookup: {
 		from: 'roomType',
-		localField: '_id',
-		foreignField: 'propertyId',
+		localField: '_id', // property._id
+		foreignField: 'propertyId', // roomType.propertyId
 		as: 'rooms',
 	},
 };

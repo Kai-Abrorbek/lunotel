@@ -17,7 +17,13 @@ export class RoomTypeInput {
 	@IsInt()
 	@Min(1)
 	@Field(() => Int)
-	roomCapacity: Number;
+	roomMaxPersonal: number;
+
+	@IsNotEmpty()
+	@IsInt()
+	@Min(1)
+	@Field(() => Int)
+	roomStandPersonal: number;
 
 	@IsNotEmpty()
 	@IsInt()
@@ -32,7 +38,7 @@ export class RoomTypeInput {
 	@IsOptional()
 	@IsInt()
 	@Field(() => Int, { nullable: true })
-	roomDiscountPrice?: Number;
+	roomDiscountPrice?: number;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })

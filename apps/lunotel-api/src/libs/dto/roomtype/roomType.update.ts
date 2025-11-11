@@ -20,7 +20,12 @@ export class RoomTypeUpdate {
 	@IsOptional()
 	@IsInt()
 	@Field(() => Int, { nullable: true })
-	roomCapacity?: number;
+	roomMaxPersonal?: number;
+
+	@IsOptional()
+	@IsInt()
+	@Field(() => Int, { nullable: true })
+	roomStandPersonal?: number;
 
 	@IsOptional()
 	@IsInt()

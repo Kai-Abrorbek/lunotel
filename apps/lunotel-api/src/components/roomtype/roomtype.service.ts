@@ -10,66 +10,51 @@ import { shapeIntoMongoObjectId } from '../../libs/config';
 import { RoomStatus } from '../../libs/enums/propertyRoomtype.enum';
 import { Message } from '../../libs/enums/common.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
-import { StayPlan } from '../../libs/dto/stayplan/stayplan';
-import { StayPlanType } from '../../libs/enums/stayplan.enum';
+import { StayplanService } from '../stayplan/stayplan.service';
+import { InventoryService } from '../inventory/inventory.service';
 
 @Injectable()
 export class RoomtypeService {
 	constructor(
 		@InjectModel('RoomType') private readonly roomTypeModel: Model<RoomType>,
-		@InjectModel('StayPlan') private readonly stayPlanModel: Model<StayPlan>,
-		private readonly propertyservice: PropertyService,
+		private readonly propertyService: PropertyService,
+		private readonly stayPlanService: StayplanService,
+		private readonly inventoryService: InventoryService,
 	) {}
 
 	public async createRoomType(input: RoomTypeInput, memberId: ObjectId): Promise<RoomType> {
 		try {
-			const result = await this.roomTypeModel.create(input);
-			if (result) {
-				await this.stayPlanModel.create([
-					{
-						roomTypeId: result._id,
-						stayPlanType: StayPlanType.DAY_USE,
-						stayPlanName: '대실 기본',
-						stayPlanBasePrice: input.basePriceDayUse,
-						stayPlanRules: {
-							durationHours: 5,
-							windowStart: '10:00',
-							windowEnd: '22:00',
-							lastCheckInBy: '20:00',
-						},
-					},
-					{
-						roomTypeId: result._id,
-						stayPlanType: StayPlanType.OVERNIGHT,
-						stayPlanName: '숙박 기본',
-						stayPlanBasePrice: input.basePriceOvernight,
-						stayPlanRules: {
-							checkInFrom: '15:00',
-							checkInUntil: '23:00',
-							checkOutBy: '11:00',
-						},
-					},
-				]);
-
+			const roomType = await this.roomTypeModel.create(input);
+			if (roomType) {
+				// STAP 1 CREATE STAYPLAN
+				const stayPlans = await this.stayPlanService.createStayPlan(
+					roomType,
+					input.basePriceDayUse,
+					input.basePriceOvernight,
+				);
+				// STAP 2 CREATE INVENTORIES
+				this.inventoryService.createInventorys(roomType, stayPlans);
+				// STAP 3 UPDATE ROOMTYPE AND PROPERTIY
 				const roomList = await this.roomTypeModel.find(
-					{ propertyId: result.propertyId },
+					{ propertyId: roomType.propertyId },
 					{ basePriceOvernight: 1, basePriceDayUse: 1 },
 				);
 
 				const roomMinPrice = Math.min(...roomList.map((room) => room.basePriceOvernight));
 
 				const propertyUpdateinput: PropertyUpdate = {
-					_id: result.propertyId,
+					_id: roomType.propertyId,
 					propertyPrice: roomMinPrice,
 				};
-				await this.propertyservice.updateProperty(memberId, propertyUpdateinput);
-				await this.propertyservice.propertyStatsEditor({
-					_id: result.propertyId,
+
+				await this.propertyService.updateProperty(memberId, propertyUpdateinput);
+				await this.propertyService.propertyStatsEditor({
+					_id: roomType.propertyId,
 					modifier: 1,
 					targetKey: 'propertyRooms',
 				});
 			}
-			return result;
+			return roomType;
 		} catch (err) {
 			throw new InternalServerErrorException(err);
 		}

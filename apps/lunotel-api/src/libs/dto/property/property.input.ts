@@ -1,5 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsBoolean, IsIn, IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsMongoId, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
 import {
 	PropertyAmenity,
 	PropertyLocation,
@@ -128,6 +128,29 @@ export class PropertiesInquiry {
 	@IsNotEmpty()
 	@Field(() => PIsearch, { nullable: true })
 	search?: PIsearch;
+}
+
+@InputType()
+export class PropertyInquiry {
+	@IsNotEmpty()
+	@Field(() => String)
+	_id: ObjectId;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	propertyName: string;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	checkInDate: string;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	checkOutDate: string;
+
+	@IsNotEmpty()
+	@Field(() => Int)
+	personal: number;
 }
 
 @InputType()
