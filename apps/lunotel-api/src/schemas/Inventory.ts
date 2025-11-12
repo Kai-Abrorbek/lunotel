@@ -28,6 +28,7 @@ const InventorySchema = new Schema(
 
 		inventoryPrice: {
 			type: Number,
+			default: 0,
 			required: false,
 		},
 

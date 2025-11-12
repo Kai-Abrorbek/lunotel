@@ -25,11 +25,11 @@ export class InventoryInput {
 	@Field(() => Int)
 	inventoryAllotment: number;
 
-	@IsOptional()
+	@IsNotEmpty()
 	@IsInt()
 	@Min(0)
-	@Field(() => Int, { nullable: true })
-	inventoryPrice?: number;
+	@Field(() => Int)
+	inventoryPrice: number;
 
 	@IsOptional()
 	@IsEnum(InventoryStatus)
