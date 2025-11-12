@@ -12,6 +12,8 @@ import * as path from 'path';
 import { T } from './types/common';
 import { PipelineStage } from 'mongoose';
 import { PropertiesInquiry, PropertyInquiry } from './dto/property/property.input';
+import { Inventory } from './dto/inventory/inventory';
+import { InventoryStatus } from './enums/inventory.enum';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
 export const getSerialForImage = (filename: string) => {
@@ -89,6 +91,7 @@ export const lookupRoomsForProperties = (input: PropertiesInquiry): PipelineStag
 								$lookup: {
 									from: 'inventory',
 									let: {
+										status: InventoryStatus.OPEN,
 										planId: '$_id',
 										roomId: '$roomTypeId',
 										fromDate: input.search.checkInDate,
@@ -99,6 +102,7 @@ export const lookupRoomsForProperties = (input: PropertiesInquiry): PipelineStag
 											$match: {
 												$expr: {
 													$and: [
+														{ $eq: ['$inventoryStatus', '$$status'] },
 														{ $eq: ['$stayPlanId', '$$planId'] },
 														{ $eq: ['$roomTypeId', '$$roomId'] },
 														{ $gte: ['$inventoryDate', '$$fromDate'] },
@@ -161,6 +165,7 @@ export const lookupRoomsForProperty = (input: PropertyInquiry): PipelineStage.Lo
 								$lookup: {
 									from: 'inventory',
 									let: {
+										status: InventoryStatus.OPEN,
 										planId: '$_id',
 										roomId: '$roomTypeId',
 										fromDate: input.checkInDate,
@@ -171,6 +176,7 @@ export const lookupRoomsForProperty = (input: PropertyInquiry): PipelineStage.Lo
 											$match: {
 												$expr: {
 													$and: [
+														{ $eq: ['$inventoryStatus', '$$status'] },
 														{ $eq: ['$stayPlanId', '$$planId'] },
 														{ $eq: ['$roomTypeId', '$$roomId'] },
 														{ $gte: ['$inventoryDate', '$$fromDate'] },

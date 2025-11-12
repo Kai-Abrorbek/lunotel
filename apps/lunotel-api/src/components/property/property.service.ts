@@ -21,19 +21,11 @@ import {
 	lookupRoomsForProperty,
 	shapeIntoMongoObjectId,
 } from '../../libs/config';
-import { RoomType } from '../../libs/dto/roomtype/roomtype';
-import { StayPlan } from '../../libs/dto/stayplan/stayplan';
-import { Inventory } from '../../libs/dto/inventory/inventory';
-import { Member } from '../../libs/dto/member/member';
 
 @Injectable()
 export class PropertyService {
 	constructor(
 		@InjectModel('Property') private readonly propertyModel: Model<Property>,
-		@InjectModel('RoomType') private readonly roomTypeModel: Model<RoomType>,
-		@InjectModel('StayPlan') private readonly stayPlanModel: Model<StayPlan>,
-		@InjectModel('Inventory') private readonly inventoryModel: Model<Inventory>,
-		@InjectModel('Member') private readonly memberModel: Model<Member>,
 		private readonly memberService: MemberService,
 	) {}
 

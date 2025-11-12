@@ -1,14 +1,9 @@
 import { Schema } from 'mongoose';
 import { ReservationStatus } from '../libs/enums/reservation';
+import { StayPlanType } from '../libs/enums/stayplan.enum';
 
 const ReservationSchema = new Schema(
 	{
-		memberId: {
-			type: Schema.Types.ObjectId,
-			required: true,
-			ref: 'User',
-		},
-
 		propertyId: {
 			type: Schema.Types.ObjectId,
 			required: true,
@@ -25,6 +20,27 @@ const ReservationSchema = new Schema(
 			type: Schema.Types.ObjectId,
 			required: true,
 			ref: 'StayPlan',
+		},
+
+		reservationPlanType: {
+			type: String,
+			enum: Object.values(StayPlanType),
+			required: true,
+		},
+
+		memberId: {
+			type: Schema.Types.ObjectId,
+			required: false,
+			ref: 'User',
+		},
+
+		memberInfo: {
+			type: {
+				guestName: { type: String, required: false },
+				guestPhone: { type: String, required: false },
+				guestEmail: { type: String, required: false },
+			},
+			required: false,
 		},
 
 		reservationStatus: {

@@ -13,6 +13,7 @@ import { DatabaseModule } from './database/database.module';
 import { RoomtypeModule } from './components/roomtype/roomtype.module';
 import { StayplanModule } from './components/stayplan/stayplan.module';
 import { InventoryModule } from './components/inventory/inventory.module';
+import { ReservationModule } from './components/reservation/reservation.module';
 
 @Module({
 	imports: [
@@ -43,6 +44,7 @@ import { InventoryModule } from './components/inventory/inventory.module';
 		RoomtypeModule,
 		StayplanModule,
 		InventoryModule,
+		ReservationModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

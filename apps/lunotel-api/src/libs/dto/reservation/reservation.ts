@@ -23,8 +23,8 @@ export class Reservation {
 	@Field(() => String)
 	_id: ObjectId;
 
-	@Field(() => String)
-	memberId: ObjectId;
+	@Field(() => String, { nullable: true })
+	memberId?: ObjectId;
 
 	@Field(() => String)
 	propertyId: ObjectId;
