@@ -14,7 +14,13 @@ import { MemberService } from '../member/member.service';
 import { StatisticModifier, T } from '../../libs/types/common';
 import { PropertyStatus } from '../../libs/enums/property.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
-import { lookupAuthMemberLiked, lookupMember, lookupRooms, shapeIntoMongoObjectId } from '../../libs/config';
+import {
+	lookupAuthMemberLiked,
+	lookupMember,
+	lookupRoomsForProperties,
+	lookupRoomsForProperty,
+	shapeIntoMongoObjectId,
+} from '../../libs/config';
 import { RoomType } from '../../libs/dto/roomtype/roomtype';
 import { StayPlan } from '../../libs/dto/stayplan/stayplan';
 import { Inventory } from '../../libs/dto/inventory/inventory';
@@ -61,76 +67,7 @@ export class PropertyService {
 			.aggregate([
 				{ $match: match },
 				{ $sort: { createdAt: 1 } },
-				{
-					$lookup: {
-						from: 'roomType',
-						let: {
-							roomId: '$_id',
-							inputPersonal: input.personal,
-						},
-						pipeline: [
-							{
-								$match: {
-									$expr: {
-										$and: [{ $eq: ['$propertyId', '$$roomId'] }, { $gte: ['$roomMaxPersonal', '$$inputPersonal'] }],
-									},
-								},
-							},
-							{
-								$lookup: {
-									from: 'stayPlan',
-									localField: '_id',
-									foreignField: 'roomTypeId',
-									pipeline: [
-										{
-											$lookup: {
-												from: 'inventory',
-												let: {
-													planId: '$_id',
-													roomId: '$roomTypeId',
-													fromDate: input.checkInDate,
-													toDate: input.checkOutDate,
-												},
-												pipeline: [
-													{
-														$match: {
-															$expr: {
-																$and: [
-																	{ $eq: ['$stayPlanId', '$$planId'] },
-																	{ $eq: ['$roomTypeId', '$$roomId'] },
-																	{ $gte: ['$inventoryDate', '$$fromDate'] },
-																	{ $lt: ['$inventoryDate', '$$toDate'] },
-																],
-															},
-														},
-													},
-													{
-														$project: {
-															_id: 1,
-															roomTypeId: 1,
-															stayPlanId: 1,
-															inventoryDate: 1,
-															inventoryAllotment: 1,
-															inventoryPrice: 1,
-															inventoryStatus: 1,
-															createdAt: 1,
-															updatedAt: 1,
-														},
-													},
-													{ $sort: { inventoryDate: 1 } },
-												],
-												as: 'inventories',
-											},
-										},
-									],
-									as: 'stayPlans',
-								},
-							},
-						],
-						as: 'rooms',
-					},
-				},
-
+				lookupRoomsForProperty(input),
 				// 2) roomCount 등 파생 필드
 				{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
 
@@ -188,9 +125,10 @@ export class PropertyService {
 	}
 
 	public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promise<Properties> {
-		const match: T = { propertyStatus: PropertyStatus.DRAFT };
+		const search = input.search;
+		const match: T = { propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] } };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
-		this.shapeMatchQuery(match, input);
+		this.shapeMatchQuery(match, search);
 
 		const result = await this.propertyModel
 			.aggregate([
@@ -201,7 +139,11 @@ export class PropertyService {
 						list: [
 							{ $skip: (input.page - 1) * input.limit },
 							{ $limit: input.limit },
-							// lookupAuthMemberLiked(memberId),
+							lookupRoomsForProperties(input),
+							lookupAuthMemberLiked(memberId),
+							// 2) roomCount 등 파생 필드
+							{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
+
 							lookupMember,
 							{ $unwind: '$memberData' },
 						],
@@ -215,9 +157,9 @@ export class PropertyService {
 		return result[0];
 	}
 
-	private shapeMatchQuery(match: T, input: PropertiesInquiry): void {
+	private shapeMatchQuery(match: T, search: NonNullable<PropertiesInquiry['search']>): void {
 		const { memberId, location, type, pricesRange, text, propertyStarsList, soldAt, amenityList, otherAmenityList } =
-			input.search;
+			search;
 
 		if (location) match.propertyLocation = location;
 		if (soldAt) match.soldAt = soldAt;

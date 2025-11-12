@@ -70,9 +70,21 @@ class PIsearch {
 	@Field(() => String, { nullable: true })
 	memberId?: ObjectId;
 
-	@IsOptional()
-	@Field(() => PropertyLocation, { nullable: true })
-	location?: PropertyLocation;
+	@IsNotEmpty()
+	@Field(() => PropertyLocation)
+	location: PropertyLocation;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	checkInDate: string;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	checkOutDate: string;
+
+	@IsNotEmpty()
+	@Field(() => Int)
+	personal: number;
 
 	@IsOptional()
 	@Field(() => PropertyType, { nullable: true })
