@@ -6,6 +6,8 @@ import PropertySchema from '../../schemas/Property.model';
 import { MemberModule } from '../member/member.module';
 import { AuthModule } from '../auth/auth.module';
 import { InventoryModule } from '../inventory/inventory.module';
+import { LikeModule } from '../like/like.module';
+import { ViewModule } from '../view/view.module';
 
 @Module({
 	imports: [
@@ -15,10 +17,11 @@ import { InventoryModule } from '../inventory/inventory.module';
 				schema: PropertySchema,
 			},
 		]),
-
 		MemberModule,
 		AuthModule,
 		InventoryModule,
+		LikeModule,
+		ViewModule,
 	],
 	providers: [PropertyService, PropertyResolver],
 	exports: [PropertyService],

@@ -14,6 +14,8 @@ import { RoomtypeModule } from './components/roomtype/roomtype.module';
 import { StayplanModule } from './components/stayplan/stayplan.module';
 import { InventoryModule } from './components/inventory/inventory.module';
 import { ReservationModule } from './components/reservation/reservation.module';
+import { LikeModule } from './components/like/like.module';
+import { ViewModule } from './components/view/view.module';
 
 @Module({
 	imports: [
@@ -45,6 +47,8 @@ import { ReservationModule } from './components/reservation/reservation.module';
 		StayplanModule,
 		InventoryModule,
 		ReservationModule,
+		LikeModule,
+		ViewModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

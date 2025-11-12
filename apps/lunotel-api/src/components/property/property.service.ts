@@ -5,6 +5,7 @@ import { Properties, Property } from '../../libs/dto/property/property';
 import {
 	AgentPropertiesInquiry,
 	AllPropertiesInquiry,
+	OrdinaryInquiry,
 	PropertiesInquiry,
 	PropertyInput,
 	PropertyInquiry,
@@ -21,12 +22,19 @@ import {
 	lookupRoomsForProperty,
 	shapeIntoMongoObjectId,
 } from '../../libs/config';
+import { LikeService } from '../like/like.service';
+import { LikeInput } from '../../libs/dto/like/like.input';
+import { LikeGroup } from '../../libs/enums/like.enum';
+import { ViewService } from '../view/view.service';
+import { ViewGroup } from '../../libs/enums/view.enum';
 
 @Injectable()
 export class PropertyService {
 	constructor(
 		@InjectModel('Property') private readonly propertyModel: Model<Property>,
 		private readonly memberService: MemberService,
+		private readonly likeService: LikeService,
+		private readonly viewService: ViewService,
 	) {}
 
 	public async createProperty(input: PropertyInput): Promise<Property> {
@@ -60,35 +68,25 @@ export class PropertyService {
 				{ $match: match },
 				{ $sort: { createdAt: 1 } },
 				lookupRoomsForProperty(input),
-				// 2) roomCount 등 파생 필드
 				{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
-
-				// 3) member join
 				lookupMember,
+				lookupAuthMemberLiked(memberId),
 				{ $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
 			])
 			.exec();
 
 		if (!targetProperty.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-		// if (memberId) {
-		// 	const viewInput = { memberId: memberId, viewRefId: propertyId, viewGroup: ViewGroup.PROPERTY };
-		// 	const newView = await this.viewService.recordView(viewInput);
+		if (memberId) {
+			const viewInput = { memberId: memberId, viewRefId: input._id, viewGroup: ViewGroup.PROPERTY };
+			const newView = await this.viewService.recordView(viewInput);
 
-		// 	if (newView) {
-		// 		await this.propertyStatsEditor({ _id: propertyId, targetKey: 'propertyViews', modifier: 1 });
-		// 		targerProperty.propertyViews++;
-		// 	}
+			if (newView) {
+				await this.propertyStatsEditor({ _id: input._id, targetKey: 'propertyViews', modifier: 1 });
+				targetProperty[0].propertyViews++;
+			}
+		}
 
-		// 	const likeInput: LikeInput = {
-		// 		memberId: memberId,
-		// 		likeRefId: propertyId,
-		// 		likeGroup: LikeGroup.PROPERTY,
-		// 	};
-		// 	targerProperty.meLiked = await this.likeService.checkLikeExistence(likeInput);
-		// }
-
-		// targerProperty.memberData = await this.memberService.getMember(null, targerProperty.memberId);
 		return targetProperty[0];
 	}
 
@@ -133,7 +131,6 @@ export class PropertyService {
 							{ $limit: input.limit },
 							lookupRoomsForProperties(input),
 							lookupAuthMemberLiked(memberId),
-							// 2) roomCount 등 파생 필드
 							{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
 
 							lookupMember,
@@ -165,13 +162,13 @@ export class PropertyService {
 		if (text) match.propertyName = { $regex: new RegExp(text, 'i') };
 	}
 
-	// public async getFavorites(memebrId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
-	// 	return await this.likeService.getFavoriteProperties(memebrId, input);
-	// }
+	public async getFavorites(memebrId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
+		return await this.likeService.getFavoriteProperties(memebrId, input);
+	}
 
-	// public async getVisited(memebrId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
-	// 	return await this.viewService.getVisitedProperties(memebrId, input);
-	// }
+	public async getVisited(memebrId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
+		return await this.viewService.getVisitedProperties(memebrId, input);
+	}
 
 	public async getAgentProperties(memberId: ObjectId, input: AgentPropertiesInquiry): Promise<Properties> {
 		const { propertyStatus } = input.search;
@@ -207,30 +204,31 @@ export class PropertyService {
 		return result[0];
 	}
 
-	// public async likeTargetProperty(memberId: ObjectId, liekRefId: ObjectId): Promise<Property> {
-	// 	const targetProperty: Property = await this.propertyModel
-	// 		.findOne({ _id: liekRefId, propertyStatus: PropertyStatus.ACTIVE })
-	// 		.exec();
+	public async likeTargetProperty(memberId: ObjectId, likeRefId: ObjectId): Promise<Property> {
+		const targetProperty: Property = await this.propertyModel
+			.findOne({ _id: likeRefId, propertyStatus: PropertyStatus.DRAFT })
+			.exec();
 
-	// 	if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		console.log(targetProperty);
+		if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-	// 	const input: LikeInput = {
-	// 		memberId: memberId,
-	// 		likeGroup: LikeGroup.PROPERTY,
-	// 		likeRefId: liekRefId,
-	// 	};
+		const input: LikeInput = {
+			memberId: memberId,
+			likeGroup: LikeGroup.PROPERTY,
+			likeRefId: likeRefId,
+		};
 
-	// 	const modifier = await this.likeService.toggleLike(input);
-	// 	const result: Property = await this.propertyStatsEditor({
-	// 		_id: liekRefId,
-	// 		targetKey: 'propertyLikes',
-	// 		modifier: modifier,
-	// 	});
+		const modifier = await this.likeService.toggleLike(input);
+		const result: Property = await this.propertyStatsEditor({
+			_id: likeRefId,
+			targetKey: 'propertyLikes',
+			modifier: modifier,
+		});
 
-	// 	if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
 
-	// 	return result;
-	// }
+		return result;
+	}
 
 	/** ADMIN **/
 	public async getAllPropertiesByAdmin(memberId: ObjectId, input: AllPropertiesInquiry): Promise<Properties> {

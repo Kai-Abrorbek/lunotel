@@ -11,6 +11,7 @@ import { Member, TotalCounter } from '../member/member';
 import { RoomType } from '../roomtype/roomtype';
 import { StayPlan } from '../stayplan/stayplan';
 import { Inventory } from '../inventory/inventory';
+import { MeLiked } from '../like/like';
 // import { MeLiked } from '../like/like';
 
 @ObjectType()
@@ -88,8 +89,8 @@ export class Property {
 	@Field(() => Int, { nullable: true })
 	roomCount?: number;
 
-	// @Field(() => [MeLiked], { nullable: true })
-	// meLiked?: MeLiked[];
+	@Field(() => [MeLiked], { nullable: true })
+	meLiked?: MeLiked[];
 }
 
 @ObjectType()
