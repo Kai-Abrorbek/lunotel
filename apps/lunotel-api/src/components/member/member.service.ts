@@ -66,17 +66,29 @@ export class MemberService {
 	}
 
 	public async getMember(memberId: ObjectId, targetId: ObjectId): Promise<Member> {
-		const search: T = {
+		const match: T = {
 			_id: targetId,
 			memberStatus: {
 				$in: [MemberStatus.ACTIVE, MemberStatus.BLOCK],
 			},
 		};
 
-		const targetMember: Member = await this.memberModel.findOne(search).exec();
-		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		const targetMember = await this.memberModel
+			.aggregate([
+				{ $match: match },
+				{
+					$lookup: {
+						from: 'reservation',
+						localField: '_id',
+						foreignField: 'memberId',
+						as: 'reservationList',
+					},
+				},
+			])
+			.exec();
+		if (!targetMember.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-		return targetMember;
+		return targetMember[0];
 	}
 
 	/** ADMIN**/
