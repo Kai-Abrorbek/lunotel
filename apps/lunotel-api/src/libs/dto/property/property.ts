@@ -86,7 +86,7 @@ export class Property {
 	rooms?: RoomType[];
 
 	@Field(() => Int, { nullable: true })
-	roomsCount?: number;
+	roomCount?: number;
 
 	// @Field(() => [MeLiked], { nullable: true })
 	// meLiked?: MeLiked[];

@@ -47,7 +47,4 @@ export class RoomType {
 	/* from aggregatio */
 	@Field(() => [StayPlan], { nullable: true })
 	stayPlans?: StayPlan[];
-
-	@Field(() => Int, { nullable: true })
-	roomCount?: number;
 }

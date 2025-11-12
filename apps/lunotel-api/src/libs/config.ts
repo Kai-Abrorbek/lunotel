@@ -10,6 +10,7 @@ export const availableCommentSorts = ['createdAt', 'updatedAt'];
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { T } from './types/common';
+import { PropertyInquiry } from './dto/property/property.input';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
 export const getSerialForImage = (filename: string) => {
@@ -94,42 +95,6 @@ interface LookupInventory {
 	inventoryDate: string;
 	// personal: number;
 }
-
-export const lookupInventory = (input: LookupInventory) => {
-	const { roomTypeId, stayPlanId, inventoryDate } = input;
-	return {
-		$lookup: {
-			from: 'inventory',
-			let: {
-				localRoomTypeId: roomTypeId,
-				localStayPlanId: stayPlanId,
-				localInventoryDate: inventoryDate,
-			},
-			pipeline: [
-				{
-					$match: {
-						$expr: {
-							$and: [
-								{ $eq: ['$roomTypeId', '$$localRoomTypeId'] },
-								{ $eq: ['$stayPlanId', '$$localStayPlanId'] },
-								{ $eq: ['$inventoryDate', '$$localInventoryDate'] },
-							],
-						},
-					},
-				},
-				{
-					$project: {
-						_id: 0,
-						roomTypeId: 1,
-						stayPlanId: 1,
-						inventoryDate: 1,
-					},
-				},
-			],
-			as: 'inventory',
-		},
-	};
-};
 
 export const lookupMember = {
 	$lookup: {
