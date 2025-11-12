@@ -16,6 +16,7 @@ import { InventoryModule } from './components/inventory/inventory.module';
 import { ReservationModule } from './components/reservation/reservation.module';
 import { LikeModule } from './components/like/like.module';
 import { ViewModule } from './components/view/view.module';
+import { CommentModule } from './components/comment/comment.module';
 
 @Module({
 	imports: [
@@ -49,6 +50,7 @@ import { ViewModule } from './components/view/view.module';
 		ReservationModule,
 		LikeModule,
 		ViewModule,
+		CommentModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],
