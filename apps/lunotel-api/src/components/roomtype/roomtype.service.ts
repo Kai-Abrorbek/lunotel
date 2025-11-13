@@ -1,14 +1,14 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
-import { RoomType } from '../../libs/dto/roomtype/roomtype';
-import { RoomTypeInput } from '../../libs/dto/roomtype/roomtype.input';
+import { RoomType, RoomTypes } from '../../libs/dto/roomtype/roomtype';
+import { RoomsIquiry, RoomTypeInput } from '../../libs/dto/roomtype/roomtype.input';
 import { PropertyService } from '../property/property.service';
 import { RoomTypeUpdate } from '../../libs/dto/roomtype/roomtype.update';
 import { T } from '../../libs/types/common';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { RoomStatus } from '../../libs/enums/propertyRoomtype.enum';
-import { Message } from '../../libs/enums/common.enum';
+import { Direction, Message } from '../../libs/enums/common.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import { StayplanService } from '../stayplan/stayplan.service';
 import { InventoryService } from '../inventory/inventory.service';
@@ -71,5 +71,32 @@ export class RoomtypeService {
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 
 		return result;
+	}
+
+	public async getMyRooms(input: RoomsIquiry, memberId: ObjectId): Promise<RoomTypes> {
+		const match: T = {
+			propertyId: shapeIntoMongoObjectId(input.search.propertyId),
+		};
+
+		if (input.search.roomName) match.roomName = { $regex: new RegExp(input.search.roomName, 'i') };
+		if (input.search.roomStatus) match.roomStatus = input.search.roomStatus;
+		if (input.search.roomMaxPersonal) match.roomMaxPersonal = { $lte: input.search.roomMaxPersonal };
+
+		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
+
+		const data = await this.roomTypeModel.aggregate([
+			{ $match: match },
+			{ $sort: sort },
+			{
+				$facet: {
+					list: [{ $skip: (input.page - 1) * input.limit }, { $limit: input.limit }],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		if (!data.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+		return data[0];
 	}
 }

@@ -1,11 +1,11 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { RoomtypeService } from './roomtype.service';
-import { RoomType } from '../../libs/dto/roomtype/roomtype';
+import { RoomType, RoomTypes } from '../../libs/dto/roomtype/roomtype';
 import { UseGuards } from '@nestjs/common';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { RoomTypeInput } from '../../libs/dto/roomtype/roomtype.input';
+import { RoomsIquiry, RoomTypeInput } from '../../libs/dto/roomtype/roomtype.input';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
 import { RoomTypeUpdate } from '../../libs/dto/roomtype/roomtype.update';
@@ -36,5 +36,17 @@ export class RoomtypeResolver {
 		console.log('Mutation updateRoomType');
 
 		return await this.roomTypeService.updateRoomType(input, memberId);
+	}
+
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
+	@Query(() => RoomTypes)
+	public async getMyRooms(
+		@Args('input') input: RoomsIquiry,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<RoomTypes> {
+		console.log('Mutation updateRoomType');
+
+		return await this.roomTypeService.getMyRooms(input, memberId);
 	}
 }

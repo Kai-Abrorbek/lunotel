@@ -2,6 +2,8 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 import { RoomStatus } from '../../enums/propertyRoomtype.enum';
 import { StayPlan } from '../stayplan/stayplan';
+import { IsNotEmpty } from 'class-validator';
+import { TotalCounter } from '../member/member';
 
 @ObjectType()
 export class RoomType {
@@ -47,4 +49,13 @@ export class RoomType {
 	/* from aggregatio */
 	@Field(() => [StayPlan], { nullable: true })
 	stayPlans?: StayPlan[];
+}
+
+@ObjectType()
+export class RoomTypes {
+	@Field(() => [RoomType])
+	list: RoomType[];
+
+	@Field(() => [TotalCounter])
+	metaCounter: TotalCounter[];
 }

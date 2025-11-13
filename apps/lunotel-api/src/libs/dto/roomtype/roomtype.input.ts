@@ -1,6 +1,9 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
 import { ObjectId } from 'mongoose';
+import { availablePropertySorts } from '../../config';
+import { Direction } from '../../enums/common.enum';
+import { RoomStatus } from '../../enums/propertyRoomtype.enum';
 
 @InputType()
 export class RoomTypeInput {
@@ -47,4 +50,49 @@ export class RoomTypeInput {
 	@IsNotEmpty()
 	@Field(() => [String])
 	roomImages: [String];
+}
+
+@InputType()
+export class RIsearch {
+	@IsNotEmpty()
+	@Field(() => String)
+	propertyId?: ObjectId;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	roomName?: string;
+
+	@IsOptional()
+	@Field(() => RoomStatus, { nullable: true })
+	roomStatus?: RoomStatus;
+
+	@IsOptional()
+	@Field(() => Int, { nullable: true })
+	roomMaxPersonal?: number;
+}
+
+@InputType()
+export class RoomsIquiry {
+	@IsNotEmpty()
+	@Min(1)
+	@Field(() => Int)
+	page: number;
+
+	@IsNotEmpty()
+	@Min(1)
+	@Field(() => Int)
+	limit: number;
+
+	@IsOptional()
+	@IsIn(availablePropertySorts)
+	@Field(() => String, { nullable: true })
+	sort?: string;
+
+	@IsOptional()
+	@Field(() => Direction, { nullable: true })
+	direction?: Direction;
+
+	@IsNotEmpty()
+	@Field(() => RIsearch, { nullable: true })
+	search?: RIsearch;
 }
