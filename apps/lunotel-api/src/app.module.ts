@@ -17,6 +17,8 @@ import { ReservationModule } from './components/reservation/reservation.module';
 import { LikeModule } from './components/like/like.module';
 import { ViewModule } from './components/view/view.module';
 import { CommentModule } from './components/comment/comment.module';
+import { FaqModule } from './components/faq/faq.module';
+import { NoticeModule } from './components/notice/notice.module';
 
 @Module({
 	imports: [
@@ -51,6 +53,8 @@ import { CommentModule } from './components/comment/comment.module';
 		LikeModule,
 		ViewModule,
 		CommentModule,
+		FaqModule,
+		NoticeModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],
