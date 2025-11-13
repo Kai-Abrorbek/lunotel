@@ -1,6 +1,7 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum FaqCategory {
+	FAQ = 'FAQ',
 	RESERVATION = 'RESERVATION',
 	PAYMENT = 'PAYMENT',
 	CANCEL_REFUND = 'CANCEL_REFUND',
@@ -14,6 +15,7 @@ export enum FaqCategory {
 registerEnumType(FaqCategory, { name: 'FaqCategory' });
 
 export enum FaqCategoryKorean {
+	FAQ = '자주 묻는 질문',
 	RESERVATION = '예약 관련',
 	PAYMENT = '결제 / 영수증',
 	CANCEL_REFUND = '취소 / 환불 규정',
