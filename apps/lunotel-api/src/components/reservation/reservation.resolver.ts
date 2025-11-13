@@ -6,6 +6,8 @@ import { WithoutGuard } from '../auth/guards/without.guard';
 import { ReservationInput } from '../../libs/dto/reservation/reservation.input';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
+import { ReservationUpdateInput } from '../../libs/dto/reservation/reservation.update';
+import { shapeIntoMongoObjectId } from '../../libs/config';
 
 @Resolver()
 export class ReservationResolver {
@@ -19,5 +21,15 @@ export class ReservationResolver {
 	): Promise<Reservation> {
 		console.log(memberId);
 		return await this.reservationService.createReservation(input, memberId);
+	}
+
+	@UseGuards(WithoutGuard)
+	@Mutation(() => Reservation)
+	public async updateReservation(
+		@Args('input') input: ReservationUpdateInput,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Reservation> {
+		input._id = shapeIntoMongoObjectId(input._id);
+		return await this.reservationService.updateReservation(input, memberId);
 	}
 }

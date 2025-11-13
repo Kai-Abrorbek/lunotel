@@ -4,33 +4,22 @@ import { Type } from 'class-transformer';
 import { ReservationStatus } from '../../enums/reservation';
 import { DATE_REGEX, TIME_REGEX } from '../../utils/datetime.util';
 import { ReservationPriceBreakdownInput } from './reservation.input';
+import { ObjectId } from 'mongoose';
+import { StayPlanType } from '../../enums/stayplan.enum';
 
 @InputType()
 export class ReservationUpdateInput {
-	@IsMongoId()
 	@IsNotEmpty()
 	@Field(() => String)
-	_id: string;
+	_id: ObjectId;
 
-	@IsOptional()
-	@IsMongoId()
-	@Field(() => String, { nullable: true })
-	memberId?: string;
+	@IsNotEmpty()
+	@Field(() => String)
+	roomTypeId: ObjectId;
 
-	@IsOptional()
-	@IsMongoId()
-	@Field(() => String, { nullable: true })
-	propertyId?: string;
-
-	@IsOptional()
-	@IsMongoId()
-	@Field(() => String, { nullable: true })
-	roomTypeId?: string;
-
-	@IsOptional()
-	@IsMongoId()
-	@Field(() => String, { nullable: true })
-	stayPlanId?: string;
+	@IsNotEmpty()
+	@Field(() => String)
+	stayPlanId: ObjectId;
 
 	@IsOptional()
 	@IsEnum(ReservationStatus)
@@ -56,14 +45,18 @@ export class ReservationUpdateInput {
 	reservationTotalPrice?: number;
 
 	@IsOptional()
-	@Matches(DATE_REGEX, { message: 'reservationCheckIn must be in YYYY-MM-DD format' })
-	@Field(() => String, { nullable: true })
-	reservationCheckIn?: string;
+	@Field(() => StayPlanType, { nullable: true })
+	reservationPlanType?: StayPlanType;
 
-	@IsOptional()
+	@IsNotEmpty()
+	@Matches(DATE_REGEX, { message: 'reservationCheckIn must be in YYYY-MM-DD format' })
+	@Field(() => String)
+	reservationCheckIn: string;
+
+	@IsNotEmpty()
 	@Matches(DATE_REGEX, { message: 'reservationCheckOut must be in YYYY-MM-DD format' })
-	@Field(() => String, { nullable: true })
-	reservationCheckOut?: string;
+	@Field(() => String)
+	reservationCheckOut: string;
 
 	@IsOptional()
 	@Matches(DATE_REGEX, { message: 'reservationDate must be in YYYY-MM-DD format' })
