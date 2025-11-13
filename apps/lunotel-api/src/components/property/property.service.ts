@@ -37,25 +37,9 @@ export class PropertyService {
 		private readonly viewService: ViewService,
 	) {}
 
-	public async createProperty(input: PropertyInput): Promise<Property> {
-		try {
-			const result = await this.propertyModel.create(input);
-
-			if (result) {
-				const member = await this.memberService.memberStatsEditor({
-					_id: result.memberId,
-					modifier: 1,
-					targetKey: 'memberProperties',
-				});
-			}
-
-			return result;
-		} catch (err) {
-			console.log('ERROR, createProperty: ', err.message);
-			throw new InternalServerErrorException(Message.CREATE_FAILED);
-		}
-	}
-
+	/*****************
+	 **  	ANY   **
+	 *****************/
 	public async getProperty(memberId: ObjectId, input: PropertyInquiry): Promise<Property> {
 		const match: T = {
 			_id: shapeIntoMongoObjectId(input._id),
@@ -88,30 +72,6 @@ export class PropertyService {
 		}
 
 		return targetProperty[0];
-	}
-
-	public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
-		let { propertyStatus, deletedAt } = input;
-		const search: T = {
-			_id: input._id,
-			memberId: memberId,
-			propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
-		};
-
-		if (propertyStatus === PropertyStatus.DELETE) input.deletedAt = new Date();
-
-		const result: Property = await this.propertyModel.findOneAndUpdate(search, input, { new: true }).exec();
-		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
-
-		if (input.deletedAt) {
-			await this.memberService.memberStatsEditor({
-				_id: memberId,
-				targetKey: 'memberProperties',
-				modifier: -1,
-			});
-		}
-
-		return result;
 	}
 
 	public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promise<Properties> {
@@ -161,13 +121,86 @@ export class PropertyService {
 
 		if (text) match.propertyName = { $regex: new RegExp(text, 'i') };
 	}
-
+	/*****************
+	 **  	USER   **
+	 *****************/
 	public async getFavorites(memebrId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
 		return await this.likeService.getFavoriteProperties(memebrId, input);
 	}
 
 	public async getVisited(memebrId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
 		return await this.viewService.getVisitedProperties(memebrId, input);
+	}
+
+	public async likeTargetProperty(memberId: ObjectId, likeRefId: ObjectId): Promise<Property> {
+		const targetProperty: Property = await this.propertyModel
+			.findOne({ _id: likeRefId, propertyStatus: PropertyStatus.DRAFT })
+			.exec();
+
+		console.log(targetProperty);
+		if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+		const input: LikeInput = {
+			memberId: memberId,
+			likeGroup: LikeGroup.PROPERTY,
+			likeRefId: likeRefId,
+		};
+
+		const modifier = await this.likeService.toggleLike(input);
+		const result: Property = await this.propertyStatsEditor({
+			_id: likeRefId,
+			targetKey: 'propertyLikes',
+			modifier: modifier,
+		});
+
+		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+
+		return result;
+	}
+	/*****************
+	 **  	AGENT   **
+	 *****************/
+	public async createProperty(input: PropertyInput): Promise<Property> {
+		try {
+			const result = await this.propertyModel.create(input);
+
+			if (result) {
+				const member = await this.memberService.memberStatsEditor({
+					_id: result.memberId,
+					modifier: 1,
+					targetKey: 'memberProperties',
+				});
+			}
+
+			return result;
+		} catch (err) {
+			console.log('ERROR, createProperty: ', err.message);
+			throw new InternalServerErrorException(Message.CREATE_FAILED);
+		}
+	}
+
+	public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
+		let { propertyStatus, deletedAt } = input;
+		const search: T = {
+			_id: input._id,
+			memberId: memberId,
+			propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
+		};
+
+		if (propertyStatus === PropertyStatus.DELETE) input.deletedAt = new Date();
+
+		const result: Property = await this.propertyModel.findOneAndUpdate(search, input, { new: true }).exec();
+		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+		if (input.deletedAt) {
+			await this.memberService.memberStatsEditor({
+				_id: memberId,
+				targetKey: 'memberProperties',
+				modifier: -1,
+			});
+		}
+
+		return result;
 	}
 
 	public async getAgentProperties(memberId: ObjectId, input: AgentPropertiesInquiry): Promise<Properties> {
@@ -203,34 +236,9 @@ export class PropertyService {
 
 		return result[0];
 	}
-
-	public async likeTargetProperty(memberId: ObjectId, likeRefId: ObjectId): Promise<Property> {
-		const targetProperty: Property = await this.propertyModel
-			.findOne({ _id: likeRefId, propertyStatus: PropertyStatus.DRAFT })
-			.exec();
-
-		console.log(targetProperty);
-		if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
-
-		const input: LikeInput = {
-			memberId: memberId,
-			likeGroup: LikeGroup.PROPERTY,
-			likeRefId: likeRefId,
-		};
-
-		const modifier = await this.likeService.toggleLike(input);
-		const result: Property = await this.propertyStatsEditor({
-			_id: likeRefId,
-			targetKey: 'propertyLikes',
-			modifier: modifier,
-		});
-
-		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
-
-		return result;
-	}
-
-	/** ADMIN **/
+	/*****************
+	 **  	ADMIN   **
+	 *****************/
 	public async getAllPropertiesByAdmin(memberId: ObjectId, input: AllPropertiesInquiry): Promise<Properties> {
 		const { propertyStatus, location, propertyStarsList, type } = input.search;
 		const match: T = {};

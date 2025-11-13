@@ -49,6 +49,17 @@ export class CommentResolver {
 		return await this.commentService.getComments(memberId, input);
 	}
 
+	@UseGuards(AuthGuard)
+	@Query((returns) => Comments)
+	public async getMyComments(
+		@Args('input') input: CommentsInquiry,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Comments> {
+		console.log('Query: getMyComments');
+		if (input.search.commentRefId) input.search.commentRefId = shapeIntoMongoObjectId(input.search.commentRefId);
+		return await this.commentService.getMyComments(memberId, input);
+	}
+
 	/** ADMIN **/
 	@Roles(MemberType.ADMIN)
 	@UseGuards(RolesGuard)

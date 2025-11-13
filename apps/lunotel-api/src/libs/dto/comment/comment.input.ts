@@ -36,9 +36,9 @@ export class CommentInput {
 
 @InputType()
 class CISearch {
-	@IsNotEmpty()
-	@Field(() => String)
-	commentRefId: ObjectId;
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	commentRefId?: ObjectId;
 }
 
 @InputType()

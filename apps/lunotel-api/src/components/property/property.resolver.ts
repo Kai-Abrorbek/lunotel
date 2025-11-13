@@ -24,32 +24,14 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 export class PropertyResolver {
 	constructor(private readonly propertyService: PropertyService) {}
 
-	@Roles(MemberType.AGENT)
-	@UseGuards(RolesGuard)
-	@Mutation(() => Property)
-	public async createProperty(
-		@Args('input') input: PropertyInput,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Property> {
-		console.log('MUtation: createProperty');
-		input.memberId = memberId;
-		return await this.propertyService.createProperty(input);
-	}
-
+	/*****************
+	 **  	ANY   **
+	 *****************/
 	@UseGuards(WithoutGuard)
 	@Query((returns) => Property)
 	public async getProperty(@Args('input') input: PropertyInquiry, @AuthMember('_id') memberId): Promise<Property> {
 		console.log('Query: getProperty');
 		return await this.propertyService.getProperty(memberId, input);
-	}
-
-	@Roles(MemberType.AGENT)
-	@UseGuards(RolesGuard)
-	@Mutation((returns) => Property)
-	public async updateProperty(@Args('input') input: PropertyUpdate, @AuthMember('_id') memberId): Promise<Property> {
-		console.log('Mutation: updateProperty');
-		input._id = shapeIntoMongoObjectId(input._id);
-		return await this.propertyService.updateProperty(memberId, input);
 	}
 
 	@UseGuards(WithoutGuard)
@@ -61,7 +43,9 @@ export class PropertyResolver {
 		console.log('Query: getProperties');
 		return await this.propertyService.getProperties(memberId, input);
 	}
-
+	/*****************
+	 **  	USER   **
+	 *****************/
 	@UseGuards(AuthGuard)
 	@Query((returns) => Properties)
 	public async getFavorites(
@@ -83,17 +67,6 @@ export class PropertyResolver {
 		return await this.propertyService.getVisited(memberId, input);
 	}
 
-	@Roles(MemberType.AGENT)
-	@UseGuards(RolesGuard)
-	@Query((returns) => Properties)
-	public async getAgentProperties(
-		@Args('input') input: AgentPropertiesInquiry,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Properties> {
-		console.log('Query: getAgentProperties');
-		return await this.propertyService.getAgentProperties(memberId, input);
-	}
-
 	@UseGuards(AuthGuard)
 	@Mutation(() => Property)
 	public async likeTargetProperty(
@@ -104,8 +77,43 @@ export class PropertyResolver {
 		const likeRefId = shapeIntoMongoObjectId(input);
 		return await this.propertyService.likeTargetProperty(memberId, likeRefId);
 	}
+	/*****************
+	 **  	AGENT   **
+	 *****************/
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
+	@Mutation(() => Property)
+	public async createProperty(
+		@Args('input') input: PropertyInput,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Property> {
+		console.log('MUtation: createProperty');
+		input.memberId = memberId;
+		return await this.propertyService.createProperty(input);
+	}
 
-	/** ADMIN **/
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
+	@Mutation((returns) => Property)
+	public async updateProperty(@Args('input') input: PropertyUpdate, @AuthMember('_id') memberId): Promise<Property> {
+		console.log('Mutation: updateProperty');
+		input._id = shapeIntoMongoObjectId(input._id);
+		return await this.propertyService.updateProperty(memberId, input);
+	}
+
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
+	@Query((returns) => Properties)
+	public async getAgentProperties(
+		@Args('input') input: AgentPropertiesInquiry,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Properties> {
+		console.log('Query: getAgentProperties');
+		return await this.propertyService.getAgentProperties(memberId, input);
+	}
+	/*****************
+	 **  	ADMIN   **
+	 *****************/
 	@Roles(MemberType.ADMIN)
 	@UseGuards(RolesGuard)
 	@Query((returns) => Properties)

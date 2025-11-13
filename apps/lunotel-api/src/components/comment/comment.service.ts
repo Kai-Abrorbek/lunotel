@@ -106,6 +106,42 @@ export class CommentService {
 		return result[0];
 	}
 
+	public async getMyComments(memberId: ObjectId, input: CommentsInquiry): Promise<Comments> {
+		const match: T = { memberId: memberId, commentStatus: CommentStatus.ACTIVE };
+		if (input.search.commentRefId) match.commentRefId = input.search.commentRefId;
+
+		const sort: T = { [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC };
+		console.log(match);
+
+		const result: Comments[] = await this.commentModel
+			.aggregate([
+				{ $match: match },
+				{ $sort: sort },
+				{
+					$facet: {
+						list: [
+							{ $skip: (input.page - 1) * input.limit },
+							{ $limit: input.limit },
+							{
+								$lookup: {
+									from: 'roomType',
+									localField: 'commentTargetId',
+									foreignField: '_id',
+									as: 'roomDate',
+								},
+							},
+							{ $unwind: '$roomDate' },
+						],
+						metaCounter: [{ $count: 'total' }],
+					},
+				},
+			])
+			.exec();
+
+		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		return result[0];
+	}
+
 	/** ADMIN **/
 	public async removeCommentByAdmin(commentId: ObjectId): Promise<Comment> {
 		const result = await this.commentModel.findOneAndDelete(commentId).exec();
