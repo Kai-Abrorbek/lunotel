@@ -28,3 +28,33 @@ export class NoticeInput {
 	@Field(() => Int, { nullable: true })
 	views?: number;
 }
+
+@InputType()
+export class NTSearch {
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	title?: string;
+
+	@IsOptional()
+	@Field(() => NoticeCategory, { nullable: true })
+	category?: NoticeCategory;
+
+	@IsOptional()
+	@Field(() => Boolean, { nullable: true })
+	isPinned?: boolean;
+}
+
+@InputType()
+export class NoticeInquiry {
+	@IsNotEmpty()
+	@Field(() => Int)
+	page: number;
+
+	@IsNotEmpty()
+	@Field(() => Int)
+	limit: number;
+
+	@IsOptional()
+	@Field(() => NTSearch, { nullable: true })
+	search?: NTSearch;
+}
