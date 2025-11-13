@@ -5,6 +5,7 @@ import { ReservationStatus } from '../../enums/reservation';
 import { DATE_REGEX, TIME_REGEX } from '../../utils/datetime.util';
 import { ObjectId } from 'mongoose';
 import { StayPlanType } from '../../enums/stayplan.enum';
+import { IsPhoneNumberKr } from '../validator/phone.validator';
 
 @InputType()
 export class memberInfoInput {
@@ -12,6 +13,23 @@ export class memberInfoInput {
 	@Field(() => String)
 	guestName;
 
+	@IsPhoneNumberKr()
+	@IsNotEmpty()
+	@Field(() => String)
+	guestPhone;
+
+	// @IsOptional()
+	// @Field(() => String, { nullable: true })
+	// guestEmail;
+}
+
+@InputType()
+export class NoAuthMemberInfoInput {
+	@IsNotEmpty()
+	@Field(() => String)
+	reservationNumber;
+
+	@IsPhoneNumberKr()
 	@IsNotEmpty()
 	@Field(() => String)
 	guestPhone;
@@ -122,4 +140,15 @@ export class ReservationInput {
 	@Matches(DATE_REGEX, { message: 'reservationDate must be in YYYY-MM-DD format' })
 	@Field(() => String, { nullable: true })
 	reservationDate?: string;
+}
+
+@InputType()
+export class ReservationsInquiry {
+	@IsNotEmpty()
+	@Field(() => Int)
+	page: number;
+
+	@IsNotEmpty()
+	@Field(() => Int)
+	limit: number;
 }

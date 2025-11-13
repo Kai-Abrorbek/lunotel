@@ -1,14 +1,20 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Reservation } from '../../libs/dto/reservation/reservation';
+import { Reservation, Reservations } from '../../libs/dto/reservation/reservation';
 import { Model, ObjectId } from 'mongoose';
-import { ReservationInput, ReservationPriceBreakdownInput } from '../../libs/dto/reservation/reservation.input';
+import {
+	NoAuthMemberInfoInput,
+	ReservationInput,
+	ReservationPriceBreakdownInput,
+	ReservationsInquiry,
+} from '../../libs/dto/reservation/reservation.input';
 import { Message } from '../../libs/enums/common.enum';
 import { RoomType } from '../../libs/dto/roomtype/roomtype';
 import { Inventory } from '../../libs/dto/inventory/inventory';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { StayPlan } from '../../libs/dto/stayplan/stayplan';
 import { ReservationUpdateInput } from '../../libs/dto/reservation/reservation.update';
+import { T } from '../../libs/types/common';
 
 @Injectable()
 export class ReservationService {
@@ -94,7 +100,9 @@ export class ReservationService {
 
 		let result: Reservation;
 		if (input.roomTypeId && input.stayPlanId) {
-			const roomType: RoomType = await this.roomTypeModel.findOne({ _id: input.roomTypeId }).exec();
+			const roomType: RoomType = await this.roomTypeModel
+				.findOne({ _id: input.roomTypeId, propertyId: reservation.propertyId })
+				.exec();
 			const stayPlan: StayPlan = await this.stayPlanModel.findOne({ _id: input.stayPlanId }).exec();
 			const inventorys: Inventory[] = await this.inventoryModel.find({
 				roomTypeId: roomType._id,
@@ -106,9 +114,12 @@ export class ReservationService {
 				return {
 					date: inventory.inventoryDate,
 					time: input.reservationCheckInAt ?? reservation.reservationCheckInAt,
-					unitPrice: inventory.inventoryPrice === 0 && stayPlan.stayPlanBasePrice,
+					unitPrice: inventory.inventoryPrice === 0 ? stayPlan.stayPlanBasePrice : inventory.inventoryPrice,
 					qty: input.reservationQty ?? 1,
-					subtotal: inventory.inventoryPrice === 0 && stayPlan.stayPlanBasePrice * (input.reservationQty ?? 1),
+					subtotal:
+						inventory.inventoryPrice === 0
+							? stayPlan.stayPlanBasePrice * (input.reservationQty ?? 1)
+							: inventory.inventoryPrice,
 				};
 			});
 
@@ -158,5 +169,44 @@ export class ReservationService {
 
 		result = await this.reservationModel.findOneAndUpdate({ _id: input._id }, input, { new: true }).exec();
 		return result;
+	}
+
+	public async getMyReservation(input: NoAuthMemberInfoInput): Promise<Reservation> {
+		const result = await this.reservationModel.findOne({
+			_id: input.reservationNumber,
+			'memberInfo.guestPhone': input.guestPhone,
+		});
+
+		if (!result) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		return result;
+	}
+
+	public async getMyReservations(input: ReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
+		const { page, limit } = input;
+		const match: T = { memberId: memberId };
+		const data = await this.reservationModel.aggregate([
+			{ $match: match },
+			{ $sort: { createdAt: 1 } },
+			{
+				$facet: {
+					list: [
+						{ $skip: (page - 1) * limit },
+						{ $limit: limit },
+						{
+							$lookup: {
+								from: 'properties',
+								localField: 'propertyId',
+								foreignField: '_id',
+								as: 'propertyData',
+							},
+						},
+					],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		return data[0];
 	}
 }

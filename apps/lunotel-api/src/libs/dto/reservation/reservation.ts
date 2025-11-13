@@ -2,6 +2,7 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 import { ReservationStatus } from '../../enums/reservation';
 import { TotalCounter } from '../member/member';
+import { Property } from '../property/property';
 
 @ObjectType()
 export class ReservationPriceBreakdownItem {
@@ -16,6 +17,19 @@ export class ReservationPriceBreakdownItem {
 
 	@Field(() => Int)
 	subtotal: number;
+}
+
+@ObjectType()
+export class type {
+	@Field(() => String)
+	guestName;
+
+	@Field(() => String)
+	guestPhone;
+
+	// @IsOptional()
+	// @Field(() => String, { nullable: true })
+	// guestEmail;
 }
 
 @ObjectType()
@@ -53,6 +67,9 @@ export class Reservation {
 	@Field(() => String, { nullable: true })
 	reservationCheckOut?: string;
 
+	@Field(() => type)
+	memberInfo: type;
+
 	@Field(() => String, { nullable: true })
 	reservationDate?: string;
 
@@ -67,6 +84,10 @@ export class Reservation {
 
 	@Field(() => Date)
 	updatedAt: Date;
+
+	/** FROM AGGREGATE **/
+	@Field(() => [Property], { nullable: true })
+	propertyData?: Property[];
 }
 
 @ObjectType()

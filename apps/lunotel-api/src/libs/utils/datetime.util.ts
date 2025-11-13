@@ -1,4 +1,5 @@
 export const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+export const PHONE_REGEX = /^(?:010|8210)\d{8}$/;
 export const TIME_REGEX = /^\d{2}:\d{2}$/;
 
 export const isDateString = (value: unknown): value is string => typeof value === 'string' && DATE_REGEX.test(value);
