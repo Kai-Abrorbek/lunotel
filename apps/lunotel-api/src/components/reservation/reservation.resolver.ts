@@ -45,7 +45,7 @@ export class ReservationResolver {
 		@Args('input') input: NoAuthMemberInfoInput,
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Reservation> {
-		return await this.reservationService.getMyReservation(input);
+		return await this.reservationService.getMyReservation(input, memberId);
 	}
 
 	@UseGuards(AuthGuard)

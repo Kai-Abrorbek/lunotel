@@ -19,6 +19,7 @@ import { ViewModule } from './components/view/view.module';
 import { CommentModule } from './components/comment/comment.module';
 import { FaqModule } from './components/faq/faq.module';
 import { NoticeModule } from './components/notice/notice.module';
+import { NotificationModule } from './components/notification/notification.module';
 
 @Module({
 	imports: [
@@ -55,6 +56,7 @@ import { NoticeModule } from './components/notice/notice.module';
 		CommentModule,
 		FaqModule,
 		NoticeModule,
+		NotificationModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

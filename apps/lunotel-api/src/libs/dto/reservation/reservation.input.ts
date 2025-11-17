@@ -34,7 +34,7 @@ export class NoAuthMemberInfoInput {
 	@Field(() => String)
 	guestPhone;
 
-	// @IsOptional()
+	// @IsNotEmpty()
 	// @Field(() => String, { nullable: true })
 	// guestEmail;
 }
