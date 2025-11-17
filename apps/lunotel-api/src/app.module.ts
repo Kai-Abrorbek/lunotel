@@ -5,21 +5,10 @@ import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver } from '@nestjs/apollo';
 import { AppResolver } from './app.resolver';
-import { MemberModule } from './components/member/member.module';
 import { T } from './libs/types/common';
-import { PropertyModule } from './components/property/property.module';
-import { GraphQLJSONObject } from 'graphql-type-json';
 import { DatabaseModule } from './database/database.module';
-import { RoomtypeModule } from './components/roomtype/roomtype.module';
-import { StayplanModule } from './components/stayplan/stayplan.module';
-import { InventoryModule } from './components/inventory/inventory.module';
-import { ReservationModule } from './components/reservation/reservation.module';
-import { LikeModule } from './components/like/like.module';
-import { ViewModule } from './components/view/view.module';
-import { CommentModule } from './components/comment/comment.module';
-import { FaqModule } from './components/faq/faq.module';
-import { NoticeModule } from './components/notice/notice.module';
-import { NotificationModule } from './components/notification/notification.module';
+import { ComponentsModule } from './components/components.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
 	imports: [
@@ -44,19 +33,9 @@ import { NotificationModule } from './components/notification/notification.modul
 				};
 			},
 		}),
-		MemberModule,
-		PropertyModule,
 		DatabaseModule,
-		RoomtypeModule,
-		StayplanModule,
-		InventoryModule,
-		ReservationModule,
-		LikeModule,
-		ViewModule,
-		CommentModule,
-		FaqModule,
-		NoticeModule,
-		NotificationModule,
+		ComponentsModule,
+		SocketModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],
