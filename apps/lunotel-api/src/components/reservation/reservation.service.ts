@@ -19,6 +19,8 @@ import { NotificationService } from '../notification/notification.service';
 import { NotificationInput } from '../../libs/dto/notification/notification.input';
 import { Property } from '../../libs/dto/property/property';
 import { NotificationType } from '../../libs/enums/notification.enum';
+import { MemberService } from '../member/member.service';
+import { ReservationStatus } from '../../libs/enums/reservation';
 
 @Injectable()
 export class ReservationService {
@@ -29,6 +31,7 @@ export class ReservationService {
 		@InjectModel('StayPlan') private readonly stayPlanModel: Model<StayPlan>,
 		@InjectModel('Inventory') private readonly inventoryModel: Model<Inventory>,
 		private readonly notificationService: NotificationService,
+		private readonly memberService: MemberService,
 	) {}
 
 	public async createReservation(input: ReservationInput, memberId: ObjectId): Promise<Reservation> {
@@ -94,6 +97,10 @@ export class ReservationService {
 						);
 					}),
 				);
+			}
+
+			if (memberId) {
+				await this.memberService.memberStatsEditor({ _id: memberId, modifier: 1, targetKey: 'memberReservations' });
 			}
 
 			// SEND NOTIFICATION FOR => USER and OWNER
@@ -204,6 +211,12 @@ export class ReservationService {
 					);
 				}),
 			);
+		}
+
+		if (input.reservationStatus === ReservationStatus.CANCELLED) {
+			if (memberId) {
+				await this.memberService.memberStatsEditor({ _id: memberId, modifier: -1, targetKey: 'memberReservations' });
+			}
 		}
 
 		// SEND NOTIFICATION FOR => USER and OWNER

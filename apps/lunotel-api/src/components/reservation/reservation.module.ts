@@ -8,6 +8,7 @@ import StayPlanSchema from '../../schemas/StayPlan.model';
 import RoomTypeSchema from '../../schemas/PropertyRoomType';
 import { NotificationModule } from '../notification/notification.module';
 import PropertySchema from '../../schemas/Property.model';
+import { MemberModule } from '../member/member.module';
 
 @Module({
 	imports: [
@@ -18,6 +19,7 @@ import PropertySchema from '../../schemas/Property.model';
 		MongooseModule.forFeature([{ name: 'Inventory', schema: ReservationSchema }]),
 		AuthModule,
 		NotificationModule,
+		MemberModule,
 	],
 	providers: [ReservationService, ReservationResolver],
 })

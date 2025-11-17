@@ -8,7 +8,6 @@ import { Direction, Message } from '../../libs/enums/common.enum';
 import { MemberStatus } from '../../libs/enums/member.enum';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
 import { StatisticModifier, T } from '../../libs/types/common';
-import { relative } from 'path';
 
 @Injectable()
 export class MemberService {

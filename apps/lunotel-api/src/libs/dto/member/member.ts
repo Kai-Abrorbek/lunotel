@@ -45,6 +45,9 @@ export class Member {
 	memberProperties: number;
 
 	@Field(() => Int)
+	memberReservations: number;
+
+	@Field(() => Int)
 	memberComments: number;
 
 	@Field(() => Int)

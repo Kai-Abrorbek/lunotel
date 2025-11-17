@@ -67,6 +67,11 @@ const MemberSchema = new Schema(
 			default: 0,
 		},
 
+		memberReservations: {
+			type: Number,
+			default: 0,
+		},
+
 		memberComments: {
 			type: Number,
 			default: 0,

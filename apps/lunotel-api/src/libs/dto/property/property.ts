@@ -44,6 +44,9 @@ export class Property {
 	propertyViews: number;
 
 	@Field(() => Int)
+	propertyReservations: number;
+
+	@Field(() => Int)
 	propertyLikes: number;
 
 	@Field(() => Int)

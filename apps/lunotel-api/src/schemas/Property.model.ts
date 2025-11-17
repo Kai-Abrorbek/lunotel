@@ -53,6 +53,11 @@ const PropertySchema = new Schema(
 			default: 0,
 		},
 
+		propertyReservations: {
+			type: Number,
+			default: 0,
+		},
+
 		propertyLikes: {
 			type: Number,
 			default: 0,
