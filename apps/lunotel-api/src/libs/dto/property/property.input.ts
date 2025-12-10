@@ -70,25 +70,29 @@ class PIsearch {
 	@Field(() => String, { nullable: true })
 	memberId?: ObjectId;
 
-	@IsNotEmpty()
-	@Field(() => PropertyLocation)
-	location: PropertyLocation;
-
-	@IsNotEmpty()
-	@Field(() => String)
-	checkInDate: string;
-
-	@IsNotEmpty()
-	@Field(() => String)
-	checkOutDate: string;
-
-	@IsNotEmpty()
-	@Field(() => Int)
-	personal: number;
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	propertyName?: string;
 
 	@IsOptional()
 	@Field(() => PropertyType, { nullable: true })
-	type?: PropertyType;
+	propertyType?: PropertyType;
+
+	@IsOptional()
+	@Field(() => PropertyLocation, { nullable: true })
+	location?: PropertyLocation;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	checkInDate?: string;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	checkOutDate?: string;
+
+	@IsOptional()
+	@Field(() => Int, { nullable: true })
+	personal?: number;
 
 	@IsOptional()
 	@Field(() => [Int], { nullable: true })
@@ -139,7 +143,7 @@ export class PropertiesInquiry {
 
 	@IsNotEmpty()
 	@Field(() => PIsearch, { nullable: true })
-	search?: PIsearch;
+	search: PIsearch;
 }
 
 @InputType()

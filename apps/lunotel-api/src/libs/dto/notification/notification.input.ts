@@ -9,6 +9,10 @@ export class NotificationInput {
 	@Field(() => String)
 	memberId: ObjectId;
 
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	refMemberId?: ObjectId;
+
 	@IsNotEmpty()
 	@Field(() => String)
 	title: string;
@@ -52,7 +56,7 @@ export class NTSearch {
 }
 
 @InputType()
-export class NotificationInquiry {
+export class NotificationsInquiry {
 	@IsNotEmpty()
 	@Min(1)
 	@Field(() => Int)

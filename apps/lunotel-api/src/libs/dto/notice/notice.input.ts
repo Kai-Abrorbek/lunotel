@@ -30,7 +30,7 @@ export class NoticeInput {
 }
 
 @InputType()
-export class NTSearch {
+export class NSearch {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
 	title?: string;
@@ -55,6 +55,6 @@ export class NoticeInquiry {
 	limit: number;
 
 	@IsOptional()
-	@Field(() => NTSearch, { nullable: true })
-	search?: NTSearch;
+	@Field(() => NSearch, { nullable: true })
+	search?: NSearch;
 }

@@ -6,7 +6,6 @@ import {
 	PropertyStatus,
 	PropertyType,
 } from '../libs/enums/property.enum';
-import { deflate } from 'zlib';
 
 const PropertySchema = new Schema(
 	{

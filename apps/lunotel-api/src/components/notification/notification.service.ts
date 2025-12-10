@@ -1,11 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
-import { Notification } from '../../libs/dto/notification/notification';
-import { NotificationInput } from '../../libs/dto/notification/notification.input';
+import { Notification, Notifications } from '../../libs/dto/notification/notification';
+import { NotificationInput, NotificationsInquiry } from '../../libs/dto/notification/notification.input';
 import { Message } from '../../libs/enums/common.enum';
 import { NotificationUpdateInput } from '../../libs/dto/notification/notification.update';
 import { shapeIntoMongoObjectId } from '../../libs/config';
+import { T } from '../../libs/types/common';
 
 @Injectable()
 export class NotificationService {
@@ -26,5 +27,27 @@ export class NotificationService {
 
 		if (!result) throw new BadRequestException(Message.UPDATE_FAILED);
 		return result;
+	}
+
+	public async getMyNotifications(input: NotificationsInquiry, memberId: ObjectId): Promise<Notifications> {
+		const { limit, page, search } = input;
+		const match: T = { memberId: memberId };
+		if (search.memberId) match.memberId = search.memberId;
+		if (search.type) match.type = search.type;
+
+		const result = await this.notificationModel.aggregate([
+			{ $match: match },
+			{ $sort: { createdAt: -1 } },
+			{
+				$facet: {
+					list: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		if (!result.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
+
+		return result[0];
 	}
 }

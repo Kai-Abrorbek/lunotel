@@ -15,6 +15,10 @@ export class ReservationUpdateInput {
 
 	@IsNotEmpty()
 	@Field(() => String)
+	propertyId: ObjectId;
+
+	@IsNotEmpty()
+	@Field(() => String)
 	roomTypeId: ObjectId;
 
 	@IsNotEmpty()
@@ -48,15 +52,15 @@ export class ReservationUpdateInput {
 	@Field(() => StayPlanType, { nullable: true })
 	reservationPlanType?: StayPlanType;
 
-	@IsNotEmpty()
+	@IsOptional()
 	@Matches(DATE_REGEX, { message: 'reservationCheckIn must be in YYYY-MM-DD format' })
-	@Field(() => String)
-	reservationCheckIn: string;
+	@Field(() => String, { nullable: true })
+	reservationCheckIn?: string;
 
-	@IsNotEmpty()
+	@IsOptional()
 	@Matches(DATE_REGEX, { message: 'reservationCheckOut must be in YYYY-MM-DD format' })
-	@Field(() => String)
-	reservationCheckOut: string;
+	@Field(() => String, { nullable: true })
+	reservationCheckOut?: string;
 
 	@IsOptional()
 	@Matches(DATE_REGEX, { message: 'reservationDate must be in YYYY-MM-DD format' })

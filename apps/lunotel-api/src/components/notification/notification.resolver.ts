@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { NotificationService } from './notification.service';
-import { Notification } from '../../libs/dto/notification/notification';
+import { Notification, Notifications } from '../../libs/dto/notification/notification';
 import { UseGuards } from '@nestjs/common';
 import { WithoutGuard } from '../auth/guards/without.guard';
 import { NotificationUpdateInput } from '../../libs/dto/notification/notification.update';
@@ -8,7 +8,7 @@ import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { NotificationInput } from '../../libs/dto/notification/notification.input';
+import { NotificationInput, NotificationsInquiry } from '../../libs/dto/notification/notification.input';
 
 @Resolver()
 export class NotificationResolver {
@@ -31,5 +31,14 @@ export class NotificationResolver {
 	): Promise<Notification> {
 		input._id = shapeIntoMongoObjectId(input._id);
 		return await this.notificationService.updateNotification(input, memberId);
+	}
+
+	@UseGuards(AuthGuard)
+	@Query(() => Notifications)
+	public async getMyNotifications(
+		@Args('input') input: NotificationsInquiry,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Notifications> {
+		return await this.notificationService.getMyNotifications(input, memberId);
 	}
 }

@@ -107,19 +107,30 @@ export class PropertyService {
 	}
 
 	private shapeMatchQuery(match: T, search: NonNullable<PropertiesInquiry['search']>): void {
-		const { memberId, location, type, pricesRange, text, propertyStarsList, soldAt, amenityList, otherAmenityList } =
-			search;
+		const {
+			memberId,
+			propertyName,
+			propertyType,
+			location,
+			pricesRange,
+			text,
+			propertyStarsList,
+			soldAt,
+			amenityList,
+			otherAmenityList,
+		} = search;
 
+		if (propertyType) match.propertyType = propertyType;
 		if (location) match.propertyLocation = location;
 		if (soldAt) match.soldAt = soldAt;
 		if (memberId) match.memberId = shapeIntoMongoObjectId(memberId);
-		if (type) match.propertyType = type;
 		if (amenityList) match.propertyAmenities = { $in: amenityList };
 		if (otherAmenityList) match.propertyOtherAmenities = { $in: otherAmenityList };
 		if (propertyStarsList && propertyStarsList.length) match.propertyStars = { $in: propertyStarsList };
 		if (pricesRange) match.propertyPrice = { $gte: pricesRange.start, $lte: pricesRange.end };
 
 		if (text) match.propertyName = { $regex: new RegExp(text, 'i') };
+		if (propertyName) match.propertyName = { $regex: new RegExp(text, 'i') };
 	}
 	/*****************
 	 **  	USER   **
