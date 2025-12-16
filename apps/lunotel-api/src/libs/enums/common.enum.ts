@@ -13,6 +13,7 @@ export enum Message {
 	NO_MEMBER_NICK = 'No member with that member nick!',
 	BLOCKED_USER = 'You have been blocked, contact the restaurant!',
 	WRING_PASSWORD = 'Wrong password, please try again!',
+	WRING_PASSWORD_KR = '비밀번호가 틀렸습니다. 다시 시도해 주세요!',
 	NOT_AUTHENTICATED = 'You are not authenticated, Please login first!',
 	TOKEN_NOT_EXIST = 'Bearer Token is not provided!',
 	ONLY_SPECIFIC_ROLES_ALLOWED = 'Allowed only for member with specific roles!',

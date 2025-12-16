@@ -6,6 +6,25 @@ import { Direction } from '../../enums/common.enum';
 import { RoomStatus } from '../../enums/propertyRoomtype.enum';
 
 @InputType()
+export class STPRules {
+	@IsOptional()
+	@Field(() => Int, { nullable: true })
+	durationHours: number;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	windowStart: string;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	windowEnd: string;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	lastCheckInBy: string;
+}
+
+@InputType()
 export class RoomTypeInput {
 	@IsNotEmpty()
 	@Field(() => String)
@@ -50,6 +69,10 @@ export class RoomTypeInput {
 	@IsNotEmpty()
 	@Field(() => [String])
 	roomImages: [String];
+
+	@IsNotEmpty()
+	@Field(() => STPRules)
+	stayPlanRules: STPRules;
 }
 
 @InputType()

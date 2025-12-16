@@ -6,6 +6,7 @@ import { DATE_REGEX, TIME_REGEX } from '../../utils/datetime.util';
 import { ObjectId } from 'mongoose';
 import { StayPlanType } from '../../enums/stayplan.enum';
 import { IsPhoneNumberKr } from '../validator/phone.validator';
+import { Direction } from '../../enums/common.enum';
 
 @InputType()
 export class memberInfoInput {
@@ -143,6 +144,17 @@ export class ReservationInput {
 }
 
 @InputType()
+class ResIsearch {
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	propertyId?: ObjectId;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	text?: string;
+}
+
+@InputType()
 export class ReservationsInquiry {
 	@IsNotEmpty()
 	@Field(() => Int)
@@ -151,4 +163,31 @@ export class ReservationsInquiry {
 	@IsNotEmpty()
 	@Field(() => Int)
 	limit: number;
+
+	@IsOptional()
+	@Field(() => Int, { nullable: true })
+	sort?: number;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	direction?: Direction;
+
+	@IsNotEmpty()
+	@Field(() => ResIsearch)
+	search: ResIsearch;
+}
+
+@InputType()
+export class RoomReservationsInquiry {
+	@IsNotEmpty()
+	@Field(() => String)
+	propertyId: ObjectId;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	roomTypeId: ObjectId;
+
+	@IsNotEmpty()
+	@Field(() => String)
+	stayPlanId: ObjectId;
 }

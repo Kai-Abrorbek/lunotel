@@ -14,6 +14,9 @@ import { RoomTypeUpdate } from '../../libs/dto/roomtype/roomtype.update';
 export class RoomtypeResolver {
 	constructor(private readonly roomTypeService: RoomtypeService) {}
 
+	/*****************
+	 **  	AGENT   **
+	 *****************/
 	@Roles(MemberType.AGENT)
 	@UseGuards(RolesGuard)
 	@Mutation(() => RoomType)

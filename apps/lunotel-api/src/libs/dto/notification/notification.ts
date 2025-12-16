@@ -2,6 +2,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 import { NotificationType } from '../../enums/notification.enum';
 import { TotalCounter } from '../member/member';
+import { Property } from '../property/property';
 
 @ObjectType()
 export class Notification {
@@ -34,6 +35,10 @@ export class Notification {
 
 	@Field(() => Date)
 	updatedAt: Date;
+
+	/** FROM AGGREGATE **/
+	@Field(() => Property, { nullable: true })
+	propertyData?: Property;
 }
 
 @ObjectType()

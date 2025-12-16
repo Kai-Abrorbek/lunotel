@@ -7,8 +7,9 @@ import {
 	ReservationInput,
 	ReservationPriceBreakdownInput,
 	ReservationsInquiry,
+	RoomReservationsInquiry,
 } from '../../libs/dto/reservation/reservation.input';
-import { Message } from '../../libs/enums/common.enum';
+import { Direction, Message } from '../../libs/enums/common.enum';
 import { RoomType } from '../../libs/dto/roomtype/roomtype';
 import { Inventory } from '../../libs/dto/inventory/inventory';
 import { shapeIntoMongoObjectId } from '../../libs/config';
@@ -299,8 +300,10 @@ export class ReservationService {
 	}
 
 	public async getMyReservations(input: ReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
-		const { page, limit } = input;
+		const { page, limit, search } = input;
 		const match: T = { memberId: memberId };
+
+		if (search.propertyId) match.propertyId = shapeIntoMongoObjectId(search.propertyId);
 		const data = await this.reservationModel.aggregate([
 			{ $match: match },
 			{ $sort: { createdAt: 1 } },
@@ -309,6 +312,82 @@ export class ReservationService {
 					list: [
 						{ $skip: (page - 1) * limit },
 						{ $limit: limit },
+						{
+							$lookup: {
+								from: 'properties',
+								localField: 'propertyId',
+								foreignField: '_id',
+								as: 'propertyData',
+							},
+						},
+					],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
+
+		return data[0];
+	}
+	/*****************
+	 **  	AGENT   **
+	 *****************/
+	public async getAgentReservations(input: ReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
+		const { page, limit, search } = input;
+		const propertyId = shapeIntoMongoObjectId(input.search.propertyId);
+		const property: Property = await this.propertyModel.findOne({ _id: propertyId, memberId: memberId }).exec();
+
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+		const match: T = {};
+		const sort: T = { [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC };
+		if (search.propertyId) match.propertyId = propertyId;
+
+		const data = await this.reservationModel.aggregate([
+			{ $match: match },
+			{ $sort: sort },
+			{
+				$facet: {
+					list: [
+						{ $skip: (page - 1) * limit },
+						{ $limit: limit },
+						{
+							$lookup: {
+								from: 'properties',
+								localField: 'propertyId',
+								foreignField: '_id',
+								as: 'propertyData',
+							},
+						},
+					],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
+
+		return data[0];
+	}
+
+	public async getRoomReservations(input: RoomReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
+		const propertyId = shapeIntoMongoObjectId(input.propertyId);
+
+		const property: Property = await this.propertyModel.findOne({ _id: propertyId, memberId: memberId }).exec();
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		const match: T = {
+			propertyId: propertyId,
+			roomTypeId: shapeIntoMongoObjectId(input.roomTypeId),
+			stayPlanId: shapeIntoMongoObjectId(input.stayPlanId),
+		};
+
+		const data = await this.reservationModel.aggregate([
+			{ $match: match },
+			{ $sort: { createdAt: -1 } },
+			{
+				$facet: {
+					list: [
 						{
 							$lookup: {
 								from: 'properties',

@@ -54,7 +54,7 @@ const RoomTypeSchema = new Schema(
 		roomStatus: {
 			type: String,
 			enum: Object.values(RoomStatus),
-			default: RoomStatus.DRAFT,
+			default: RoomStatus.MAINTENANCE,
 		},
 	},
 	{ timestamps: true, collection: 'roomType' },

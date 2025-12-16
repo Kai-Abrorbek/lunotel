@@ -40,12 +40,30 @@ export class NotificationService {
 			{ $sort: { createdAt: -1 } },
 			{
 				$facet: {
-					list: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+					list: [
+						{ $skip: (page - 1) * limit },
+						{ $limit: limit },
+						{
+							$lookup: {
+								from: 'properties',
+								localField: 'propertyId',
+								foreignField: '_id',
+								as: 'propertyData',
+							},
+						},
+						{
+							$unwind: {
+								path: '$propertyData',
+								preserveNullAndEmptyArrays: true,
+							},
+						},
+					],
 					metaCounter: [{ $count: 'total' }],
 				},
 			},
 		]);
 
+		console.log(result[0].propertyData);
 		if (!result.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
 
 		return result[0];

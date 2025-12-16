@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { StayPlanInput } from '../../libs/dto/stayplan/stayplan.input';
 import { StayPlanType } from '../../libs/enums/stayplan.enum';
 import { RoomType } from '../../libs/dto/roomtype/roomtype';
+import { STPRules } from '../../libs/dto/roomtype/roomtype.input';
 
 @Injectable()
 export class StayplanService {
@@ -14,6 +15,7 @@ export class StayplanService {
 		roomType: RoomType,
 		basePriceDayUse: number,
 		basePriceOvernight: number,
+		stayPlanRules: STPRules,
 	): Promise<StayPlan[]> {
 		try {
 			const stayPlanInput: StayPlanInput[] = [
@@ -23,10 +25,10 @@ export class StayplanService {
 					stayPlanName: '대실 기본',
 					stayPlanBasePrice: basePriceDayUse,
 					stayPlanRules: {
-						durationHours: 5,
-						windowStart: '10:00',
-						windowEnd: '22:00',
-						lastCheckInBy: '20:00',
+						durationHours: stayPlanRules.durationHours,
+						windowStart: stayPlanRules.windowStart,
+						windowEnd: stayPlanRules.windowEnd,
+						lastCheckInBy: stayPlanRules.lastCheckInBy,
 					},
 				},
 				{
@@ -35,9 +37,9 @@ export class StayplanService {
 					stayPlanName: '숙박 기본',
 					stayPlanBasePrice: basePriceOvernight,
 					stayPlanRules: {
-						checkInFrom: '15:00',
-						checkInUntil: '23:00',
-						checkOutBy: '11:00',
+						checkInFrom: stayPlanRules.windowStart,
+						checkInUntil: stayPlanRules.lastCheckInBy,
+						checkOutBy: stayPlanRules.windowStart,
 					},
 				},
 			];

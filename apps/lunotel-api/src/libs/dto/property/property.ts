@@ -12,6 +12,7 @@ import { RoomType } from '../roomtype/roomtype';
 import { StayPlan } from '../stayplan/stayplan';
 import { Inventory } from '../inventory/inventory';
 import { MeLiked } from '../like/like';
+import { Reservation } from '../reservation/reservation';
 // import { MeLiked } from '../like/like';
 
 @ObjectType()
@@ -94,6 +95,9 @@ export class Property {
 
 	@Field(() => [MeLiked], { nullable: true })
 	meLiked?: MeLiked[];
+
+	@Field(() => [Reservation], { nullable: true })
+	reservationData?: Reservation[];
 }
 
 @ObjectType()

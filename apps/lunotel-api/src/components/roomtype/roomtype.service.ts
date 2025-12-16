@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import { RoomType, RoomTypes } from '../../libs/dto/roomtype/roomtype';
@@ -12,11 +12,13 @@ import { Direction, Message } from '../../libs/enums/common.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import { StayplanService } from '../stayplan/stayplan.service';
 import { InventoryService } from '../inventory/inventory.service';
+import { Property } from '../../libs/dto/property/property';
 
 @Injectable()
 export class RoomtypeService {
 	constructor(
 		@InjectModel('RoomType') private readonly roomTypeModel: Model<RoomType>,
+		@InjectModel('Property') private readonly propertyModel: Model<Property>,
 		private readonly propertyService: PropertyService,
 		private readonly stayPlanService: StayplanService,
 		private readonly inventoryService: InventoryService,
@@ -24,13 +26,25 @@ export class RoomtypeService {
 
 	public async createRoomType(input: RoomTypeInput, memberId: ObjectId): Promise<RoomType> {
 		try {
-			const roomType = await this.roomTypeModel.create(input);
+			const roomTypeInput = {
+				propertyId: input.propertyId,
+				roomName: input.roomName,
+				roomStandPersonal: input.roomStandPersonal,
+				roomMaxPersonal: input.roomMaxPersonal,
+				basePriceDayUse: input.basePriceDayUse,
+				basePriceOvernight: input.basePriceOvernight,
+				roomImages: input.roomImages,
+				roomDiscountPrice: input.roomDiscountPrice ?? 0,
+			};
+
+			const roomType = await this.roomTypeModel.create(roomTypeInput);
 			if (roomType) {
 				// STAP 1 CREATE STAYPLAN
 				const stayPlans = await this.stayPlanService.createStayPlan(
 					roomType,
 					input.basePriceDayUse,
 					input.basePriceOvernight,
+					input.stayPlanRules,
 				);
 				// STAP 2 CREATE INVENTORIES
 				this.inventoryService.createInventorys(roomType, stayPlans);
@@ -64,7 +78,6 @@ export class RoomtypeService {
 		const search: T = {
 			_id: shapeIntoMongoObjectId(input._id),
 			propertyId: shapeIntoMongoObjectId(input.propertyId),
-			roomStatus: { $in: [RoomStatus.DRAFT, RoomStatus.ACTIVE] },
 		};
 
 		const result = await this.roomTypeModel.findOneAndUpdate(search, input, { new: true }).exec();
@@ -74,9 +87,13 @@ export class RoomtypeService {
 	}
 
 	public async getMyRooms(input: RoomsIquiry, memberId: ObjectId): Promise<RoomTypes> {
-		const match: T = {
-			propertyId: shapeIntoMongoObjectId(input.search.propertyId),
-		};
+		const { page, limit, search } = input;
+		const propertyId = shapeIntoMongoObjectId(search.propertyId);
+		const property: Property = await this.propertyModel.findOne({ _id: propertyId, memberId: memberId }).exec();
+
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		const match: T = { propertyId: propertyId };
 
 		if (input.search.roomName) match.roomName = { $regex: new RegExp(input.search.roomName, 'i') };
 		if (input.search.roomStatus) match.roomStatus = input.search.roomStatus;
@@ -89,7 +106,18 @@ export class RoomtypeService {
 			{ $sort: sort },
 			{
 				$facet: {
-					list: [{ $skip: (input.page - 1) * input.limit }, { $limit: input.limit }],
+					list: [
+						{ $skip: (page - 1) * limit },
+						{ $limit: limit },
+						{
+							$lookup: {
+								from: 'stayPlan',
+								localField: '_id',
+								foreignField: 'roomTypeId',
+								as: 'stayPlans',
+							},
+						},
+					],
 					metaCounter: [{ $count: 'total' }],
 				},
 			},

@@ -4,6 +4,25 @@ import { ObjectId } from 'mongoose';
 import { RoomStatus } from '../../enums/propertyRoomtype.enum';
 
 @InputType()
+export class SPRules {
+	@IsOptional()
+	@Field(() => Int, { nullable: true })
+	durationHours?: number;
+
+	@IsNotEmpty()
+	@Field(() => String, { nullable: true })
+	windowStart?: string;
+
+	@IsNotEmpty()
+	@Field(() => String, { nullable: true })
+	windowEnd?: string;
+
+	@IsNotEmpty()
+	@Field(() => String, { nullable: true })
+	lastCheckInBy?: string;
+}
+
+@InputType()
 export class RoomTypeUpdate {
 	@IsNotEmpty()
 	@Field(() => String)
@@ -58,4 +77,8 @@ export class RoomTypeUpdate {
 	@IsOptional()
 	@Field(() => RoomStatus, { nullable: true })
 	roomStatus?: RoomStatus;
+
+	@IsOptional()
+	@Field(() => SPRules, { nullable: true })
+	stayPlanRules?: SPRules;
 }

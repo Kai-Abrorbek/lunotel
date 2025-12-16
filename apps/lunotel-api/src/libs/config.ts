@@ -114,8 +114,14 @@ export const lookupRoomsForProperties = (input: PropertiesInquiry): PipelineStag
 														{ $eq: ['$inventoryStatus', '$$status'] },
 														{ $eq: ['$stayPlanId', '$$planId'] },
 														{ $eq: ['$roomTypeId', '$$roomId'] },
-														{ $gte: ['$inventoryDate', '$$fromDate'] },
-														{ $lt: ['$inventoryDate', '$$toDate'] },
+														{
+															$or: [{ $eq: ['$$fromDate', null] }, { $gte: ['$inventoryDate', '$$fromDate'] }],
+														},
+														// { $gte: ['$inventoryDate', '$$fromDate'] }, // fromDate 가 없으면  inventory 정보가 안 나옴
+														{
+															$or: [{ $eq: ['$$toDate', null] }, { $lt: ['$inventoryDate', '$$toDate'] }],
+														},
+														// { $lt: ['$inventoryDate', '$$toDate'] }, // toDate 가 없으면  inventory 정보가 안 나옴
 													],
 												},
 											},

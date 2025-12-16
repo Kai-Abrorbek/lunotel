@@ -109,6 +109,7 @@ export class PropertyResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Properties> {
 		console.log('Query: getAgentProperties');
+		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
 		return await this.propertyService.getAgentProperties(memberId, input);
 	}
 	/*****************

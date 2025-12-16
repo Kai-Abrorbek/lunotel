@@ -3,20 +3,22 @@ import { IsEmail, IsIn, IsNotEmpty, IsOptional, Length, Min } from 'class-valida
 import { MemberStatus, MemberType } from '../../enums/member.enum';
 import { availableAgentSorts, availableMembersSorts } from '../../config';
 import { Direction } from '../../enums/common.enum';
+import { IsPhoneNumberKr } from '../validator/phone.validator';
 
 @InputType()
 export class SignupInput {
 	@IsNotEmpty()
-	@Length(5, 12)
+	@Length(3, 20)
 	@Field(() => String)
 	memberNick: string;
 
-	@IsNotEmpty()
-	@Field(() => String)
-	memberPhone: string;
+	@IsOptional()
+	// @IsPhoneNumberKr()
+	@Field(() => String, { nullable: true })
+	memberPhone?: string;
 
 	@IsNotEmpty()
-	@Length(5, 12)
+	@Length(5, 50)
 	@Field(() => String)
 	memberPassword: string;
 
@@ -31,6 +33,10 @@ export class SignupInput {
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
+	memberFullName: string;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
 	memberImage?: String;
 
 	@IsOptional()
@@ -41,12 +47,12 @@ export class SignupInput {
 @InputType()
 export class LoginInput {
 	@IsNotEmpty()
-	@Length(3, 12)
+	@Length(3, 20)
 	@Field(() => String)
-	memberNick: string;
+	memberEmail: string;
 
 	@IsNotEmpty()
-	@Length(5, 12)
+	@Length(5, 20)
 	@Field(() => String)
 	memberPassword: string;
 }

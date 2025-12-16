@@ -174,6 +174,10 @@ class APIsearch {
 	@IsOptional()
 	@Field(() => PropertyStatus, { nullable: true })
 	propertyStatus?: PropertyStatus;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	propertyId?: ObjectId;
 }
 
 @InputType()

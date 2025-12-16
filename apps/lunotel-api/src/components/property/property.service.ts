@@ -215,14 +215,15 @@ export class PropertyService {
 	}
 
 	public async getAgentProperties(memberId: ObjectId, input: AgentPropertiesInquiry): Promise<Properties> {
-		const { propertyStatus } = input.search;
+		const { propertyStatus, propertyId } = input.search;
 		if (propertyStatus === PropertyStatus.DELETE) throw new BadRequestException(Message.NOT_ALLOWED_REQUEST);
 
 		const match: T = {
 			memberId: memberId,
 			propertyStatus: propertyStatus ?? { $ne: PropertyStatus.DELETE },
 		};
-		console.log('match ;', match);
+		if (propertyId) match._id = propertyId;
+
 		const sort: T = { [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC };
 
 		const result = await this.propertyModel
@@ -236,6 +237,14 @@ export class PropertyService {
 							{ $limit: input.limit },
 							lookupMember,
 							{ $unwind: '$memberData' },
+							{
+								$lookup: {
+									from: 'reservation',
+									localField: '_id',
+									foreignField: 'propertyId',
+									as: 'reservationData',
+								},
+							},
 						],
 						metaCounter: [{ $count: 'total' }],
 					},

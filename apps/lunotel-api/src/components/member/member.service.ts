@@ -16,6 +16,32 @@ export class MemberService {
 		private readonly authService: AuthService,
 	) {}
 
+	public async socialLoginOrSignup(input: SignupInput): Promise<Member> {
+		const { memberEmail, memberPassword, memberNick } = input;
+		const respone: Member = await this.memberModel
+			.findOne({ memberEmail: memberEmail })
+			.select('+memberPassword')
+			.exec();
+
+		if (respone) {
+			respone.accessToken = await this.authService.createToken(respone);
+			return respone;
+		}
+
+		if (!respone || respone.memberStatus === MemberStatus.DELETE) {
+			try {
+				input.memberPassword = await this.authService.hashPassword(memberPassword);
+				const result: Member = await this.memberModel.create(input);
+				result.accessToken = await this.authService.createToken(result);
+				return result;
+			} catch (err) {
+				throw new BadRequestException(err.message);
+			}
+		} else if (respone.memberStatus === MemberStatus.BLOCK) {
+			throw new InternalServerErrorException(Message.BLOCKED_USER);
+		}
+	}
+
 	public async signup(input: SignupInput): Promise<Member> {
 		input.memberPassword = await this.authService.hashPassword(input.memberPassword);
 		try {
@@ -31,8 +57,11 @@ export class MemberService {
 	}
 
 	public async login(input: LoginInput): Promise<Member> {
-		const { memberNick, memberPassword } = input;
-		const respone: Member = await this.memberModel.findOne({ memberNick: memberNick }).select('+memberPassword').exec();
+		const { memberEmail, memberPassword } = input;
+		const respone: Member = await this.memberModel
+			.findOne({ memberEmail: memberEmail })
+			.select('+memberPassword')
+			.exec();
 
 		if (!respone || respone.memberStatus === MemberStatus.DELETE) {
 			throw new InternalServerErrorException(Message.NO_MEMBER_NICK);
@@ -41,7 +70,7 @@ export class MemberService {
 		}
 
 		const isMatch = await this.authService.comparePasswords(memberPassword, respone.memberPassword);
-		if (!isMatch) throw new InternalServerErrorException(Message.WRING_PASSWORD);
+		if (!isMatch) throw new InternalServerErrorException(Message.WRING_PASSWORD_KR);
 
 		respone.accessToken = await this.authService.createToken(respone);
 		return respone;

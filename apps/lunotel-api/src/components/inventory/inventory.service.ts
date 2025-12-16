@@ -16,7 +16,7 @@ export class InventoryService {
 
 	public async createInventorys(roomType: RoomType, stayPlans: StayPlan[]): Promise<void> {
 		try {
-			const dates = getNextMonthsDates(1);
+			const dates = getNextMonthsDates(1); // parametr => 몇개월치
 			const roomTypeId = shapeIntoMongoObjectId(roomType._id);
 			for (const plan of stayPlans) {
 				await this.inventoryModel.bulkWrite(
@@ -28,7 +28,7 @@ export class InventoryService {
 									roomTypeId,
 									stayPlanId: plan._id,
 									inventoryDate: date,
-									inventoryAllotment: 5,
+									inventoryAllotment: 1,
 									inventoryStatus: InventoryStatus.OPEN,
 									inventoryPrice: plan.stayPlanBasePrice,
 								},

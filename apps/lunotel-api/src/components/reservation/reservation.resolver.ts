@@ -8,12 +8,16 @@ import {
 	NoAuthMemberInfoInput,
 	ReservationInput,
 	ReservationsInquiry,
+	RoomReservationsInquiry,
 } from '../../libs/dto/reservation/reservation.input';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
 import { ReservationUpdateInput } from '../../libs/dto/reservation/reservation.update';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MemberType } from '../../libs/enums/member.enum';
 
 @Resolver()
 export class ReservationResolver {
@@ -55,5 +59,30 @@ export class ReservationResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Reservations> {
 		return await this.reservationService.getMyReservations(input, memberId);
+	}
+
+	/*****************
+	 **  	AGENT   **
+	 *****************/
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
+	@Query(() => Reservations)
+	public async getAgentReservations(
+		@Args('input') input: ReservationsInquiry,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Reservations> {
+		console.log('Query: getAgentReservations');
+		return await this.reservationService.getAgentReservations(input, memberId);
+	}
+
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
+	@Query(() => Reservations)
+	public async getRoomReservations(
+		@Args('input') input: RoomReservationsInquiry,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Reservations> {
+		console.log('Query: getRoomReservations');
+		return await this.reservationService.getRoomReservations(input, memberId);
 	}
 }
