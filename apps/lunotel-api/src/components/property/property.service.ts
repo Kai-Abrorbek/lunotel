@@ -13,7 +13,7 @@ import {
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { MemberService } from '../member/member.service';
 import { StatisticModifier, T } from '../../libs/types/common';
-import { PropertyStatus } from '../../libs/enums/property.enum';
+import { PropertyStatus, PropertyType } from '../../libs/enums/property.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import {
 	lookupAuthMemberLiked,
@@ -52,9 +52,10 @@ export class PropertyService {
 				{ $match: match },
 				{ $sort: { createdAt: 1 } },
 				lookupRoomsForProperty(input),
+				{ $match: { $expr: { $gt: [{ $size: '$rooms' }, 0] } } },
+				lookupAuthMemberLiked(memberId),
 				{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
 				lookupMember,
-				lookupAuthMemberLiked(memberId),
 				{ $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
 			])
 			.exec();
@@ -75,8 +76,21 @@ export class PropertyService {
 	}
 
 	public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promise<Properties> {
+		console.log(input);
+		if (input.search.propertyType === PropertyType.ALL) {
+			delete input.search.propertyType;
+		}
+
+		if (input?.search?.amenityList?.length === 0) {
+			delete input.search.amenityList;
+		}
+
+		if (input?.search?.otherAmenityList?.length === 0) {
+			delete input.search.otherAmenityList;
+		}
+
 		const search = input.search;
-		const match: T = { propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] } };
+		const match: T = { propertyStatus: { $in: [PropertyStatus.ACTIVE] } };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 		this.shapeMatchQuery(match, search);
 
@@ -87,16 +101,20 @@ export class PropertyService {
 				{
 					$facet: {
 						list: [
+							lookupRoomsForProperties(input),
+							{ $match: { $expr: { $gt: [{ $size: '$rooms' }, 0] } } },
 							{ $skip: (input.page - 1) * input.limit },
 							{ $limit: input.limit },
-							lookupRoomsForProperties(input),
 							lookupAuthMemberLiked(memberId),
 							{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
-
 							lookupMember,
 							{ $unwind: '$memberData' },
 						],
-						metaCounter: [{ $count: 'total' }],
+						metaCounter: [
+							lookupRoomsForProperties(input),
+							{ $match: { $expr: { $gt: [{ $size: '$rooms' }, 0] } } },
+							{ $count: 'total' },
+						],
 					},
 				},
 			])
@@ -145,10 +163,9 @@ export class PropertyService {
 
 	public async likeTargetProperty(memberId: ObjectId, likeRefId: ObjectId): Promise<Property> {
 		const targetProperty: Property = await this.propertyModel
-			.findOne({ _id: likeRefId, propertyStatus: PropertyStatus.DRAFT })
+			.findOne({ _id: likeRefId, propertyStatus: PropertyStatus.ACTIVE })
 			.exec();
 
-		console.log(targetProperty);
 		if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		const input: LikeInput = {

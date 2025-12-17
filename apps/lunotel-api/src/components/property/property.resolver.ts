@@ -41,6 +41,7 @@ export class PropertyResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Properties> {
 		console.log('Query: getProperties');
+		console.log(input);
 		return await this.propertyService.getProperties(memberId, input);
 	}
 	/*****************
