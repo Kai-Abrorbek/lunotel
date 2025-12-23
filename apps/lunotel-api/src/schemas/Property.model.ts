@@ -32,6 +32,21 @@ const PropertySchema = new Schema(
 			required: true,
 		},
 
+		propertyDetailAddress: {
+			type: String,
+			required: true,
+		},
+
+		propertyLat: {
+			type: String,
+			required: true,
+		},
+
+		propertyLng: {
+			type: String,
+			required: true,
+		},
+
 		propertyName: {
 			type: String,
 			required: true,

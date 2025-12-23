@@ -3,6 +3,7 @@ import { ObjectId } from 'mongoose';
 import { ReservationStatus } from '../../enums/reservation';
 import { TotalCounter } from '../member/member';
 import { Property } from '../property/property';
+import { RoomType } from '../roomtype/roomtype';
 
 @ObjectType()
 export class ReservationPriceBreakdownItem {
@@ -52,6 +53,9 @@ export class Reservation {
 	@Field(() => ReservationStatus)
 	reservationStatus: ReservationStatus;
 
+	@Field(() => String)
+	reservationPlanType: string;
+
 	@Field(() => Int)
 	reservationQty: number;
 
@@ -88,6 +92,9 @@ export class Reservation {
 	/** FROM AGGREGATE **/
 	@Field(() => [Property], { nullable: true })
 	propertyData?: Property[];
+
+	@Field(() => [RoomType], { nullable: true })
+	roomData?: RoomType[];
 }
 
 @ObjectType()

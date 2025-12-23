@@ -1,5 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Types } from 'mongoose';
+import { NumberExpression, Types } from 'mongoose';
 import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enum';
 import { Reservation } from '../reservation/reservation';
 import { notEqual } from 'assert';
@@ -43,6 +43,9 @@ export class Member {
 
 	@Field(() => Int)
 	memberProperties: number;
+
+	@Field(() => Int)
+	memberRank: number;
 
 	@Field(() => Int)
 	memberReservations: number;

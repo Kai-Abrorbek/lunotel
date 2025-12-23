@@ -152,6 +152,10 @@ class ResIsearch {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
 	text?: string;
+
+	@IsOptional()
+	@Field(() => ReservationStatus, { nullable: true })
+	reservationStatus?: ReservationStatus;
 }
 
 @InputType()

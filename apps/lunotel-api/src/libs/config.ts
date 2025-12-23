@@ -13,7 +13,7 @@ export const availablePropertySorts = [
 	'propertyComments',
 ];
 export const availableBoardArticlesSorts = ['createdAt', 'updatedAt', 'articleLikes', 'articleViews'];
-export const availableCommentSorts = ['createdAt', 'updatedAt'];
+export const availableCommentSorts = ['createdAt', 'commentRating'];
 
 /* IMAGE CONFIGURATION */
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +23,7 @@ import { PipelineStage } from 'mongoose';
 import { PropertiesInquiry, PropertyInquiry } from './dto/property/property.input';
 import { Inventory } from './dto/inventory/inventory';
 import { InventoryStatus } from './enums/inventory.enum';
+import { StayPlanType } from './enums/stayplan.enum';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
 export const getSerialForImage = (filename: string) => {
@@ -145,11 +146,11 @@ export const lookupRoomsForProperties = (input: PropertiesInquiry): PipelineStag
 									as: 'inventories',
 								},
 							},
-							{
-								$match: {
-									$expr: { $gt: [{ $size: '$inventories' }, 0] },
-								},
-							},
+							// {
+							// 	$match: {
+							// 		$expr: { $gt: [{ $size: '$inventories' }, 0] },
+							// 	},
+							// },
 						],
 						as: 'stayPlans',
 					},
@@ -237,10 +238,13 @@ export const lookupRoomsForProperty = (input: PropertyInquiry): PipelineStage.Lo
 								},
 							},
 							{
-								$match: {
-									$expr: { $gt: [{ $size: '$inventories' }, 0] },
-								},
+								$sort: { stayPlanType: 1 as const }, // ✅ 항상 같은 순서
 							},
+							// {
+							// 	$match: {
+							// 		$expr: { $gt: [{ $size: '$inventories' }, 0] },
+							// 	},
+							// },
 						],
 						as: 'stayPlans',
 					},

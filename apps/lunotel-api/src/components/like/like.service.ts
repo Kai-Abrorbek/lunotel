@@ -7,7 +7,7 @@ import { T } from '../../libs/types/common';
 import { OrdinaryInquiry } from '../../libs/dto/property/property.input';
 import { Message } from '../../libs/enums/common.enum';
 import { LikeGroup } from '../../libs/enums/like.enum';
-import { lookupFavorite } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupFavorite } from '../../libs/config';
 import { Properties } from '../../libs/dto/property/property';
 
 @Injectable()

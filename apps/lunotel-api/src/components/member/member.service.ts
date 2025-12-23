@@ -16,6 +16,10 @@ export class MemberService {
 		private readonly authService: AuthService,
 	) {}
 
+	public async me(memberId: ObjectId): Promise<Member> {
+		return this.memberModel.findById(memberId);
+	}
+
 	public async socialLoginOrSignup(input: SignupInput): Promise<Member> {
 		const { memberEmail, memberPassword, memberNick } = input;
 		const respone: Member = await this.memberModel

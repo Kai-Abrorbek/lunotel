@@ -9,11 +9,23 @@ import { RoomsIquiry, RoomTypeInput } from '../../libs/dto/roomtype/roomtype.inp
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
 import { RoomTypeUpdate } from '../../libs/dto/roomtype/roomtype.update';
+import { WithoutGuard } from '../auth/guards/without.guard';
+import { shapeIntoMongoObjectId } from '../../libs/config';
 
 @Resolver()
 export class RoomtypeResolver {
 	constructor(private readonly roomTypeService: RoomtypeService) {}
 
+	/*****************
+	 **  	ANY   **
+	 *****************/
+	@UseGuards(WithoutGuard)
+	@Query(() => RoomType)
+	public async getRoom(@Args('roomId') roomId: string, @AuthMember('_id') memberId: ObjectId): Promise<RoomType> {
+		console.log('Mutation updateRoomType');
+
+		return await this.roomTypeService.getRoom(shapeIntoMongoObjectId(roomId), memberId);
+	}
 	/*****************
 	 **  	AGENT   **
 	 *****************/

@@ -14,6 +14,10 @@ import { Direction } from '../../enums/common.enum';
 @InputType()
 export class PropertyInput {
 	@IsNotEmpty()
+	@Field(() => PropertyStatus)
+	propertyStatus: PropertyStatus;
+
+	@IsNotEmpty()
 	@Field(() => PropertyType)
 	propertyType: PropertyType;
 
@@ -25,6 +29,21 @@ export class PropertyInput {
 	@Length(5, 100)
 	@Field(() => String)
 	propertyAddress: string;
+
+	@IsNotEmpty()
+	@Length(3, 100)
+	@Field(() => String)
+	propertyDetailAddress: string;
+
+	@IsNotEmpty()
+	@Length(3, 20)
+	@Field(() => String)
+	propertyLat: string;
+
+	@IsNotEmpty()
+	@Length(3, 20)
+	@Field(() => String)
+	propertyLng: string;
 
 	@IsNotEmpty()
 	@Length(3, 100)

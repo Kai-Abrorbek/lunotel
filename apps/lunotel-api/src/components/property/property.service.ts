@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, ObjectId } from 'mongoose';
+import { Model, ObjectId, PipelineStage } from 'mongoose';
 import { Properties, Property } from '../../libs/dto/property/property';
 import {
 	AgentPropertiesInquiry,
@@ -52,7 +52,7 @@ export class PropertyService {
 				{ $match: match },
 				{ $sort: { createdAt: 1 } },
 				lookupRoomsForProperty(input),
-				{ $match: { $expr: { $gt: [{ $size: '$rooms' }, 0] } } },
+				// { $match: { $expr: { $gt: [{ $size: '$rooms' }, 0] } } },
 				lookupAuthMemberLiked(memberId),
 				{ $addFields: { roomCount: { $size: { $ifNull: ['$rooms', []] } } } },
 				lookupMember,
@@ -60,7 +60,7 @@ export class PropertyService {
 			])
 			.exec();
 
-		if (!targetProperty.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		// if (!targetProperty.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		if (memberId) {
 			const viewInput = { memberId: memberId, viewRefId: input._id, viewGroup: ViewGroup.PROPERTY };
@@ -76,7 +76,6 @@ export class PropertyService {
 	}
 
 	public async getProperties(memberId: ObjectId, input: PropertiesInquiry): Promise<Properties> {
-		console.log(input);
 		if (input.search.propertyType === PropertyType.ALL) {
 			delete input.search.propertyType;
 		}
@@ -150,6 +149,115 @@ export class PropertyService {
 		if (text) match.propertyName = { $regex: new RegExp(text, 'i') };
 		if (propertyName) match.propertyName = { $regex: new RegExp(text, 'i') };
 	}
+
+	public async getSimilarProperties(memberId: ObjectId, propertyId: ObjectId): Promise<Property[]> {
+		const targetProperty = await this.propertyModel.findById(propertyId).lean();
+		if (!targetProperty) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		const baseLat = Number(targetProperty.propertyLat);
+		const baseLng = Number(targetProperty.propertyLng);
+		const pipeline: PipelineStage[] = [
+			{
+				$match: {
+					propertyLocation: targetProperty.propertyLocation,
+					propertyType: targetProperty.propertyType,
+					soldAt: false,
+					_id: { $ne: targetProperty._id },
+				},
+			},
+			{
+				$addFields: {
+					lat: { $toDouble: '$propertyLat' },
+					lng: { $toDouble: '$propertyLng' },
+				},
+			},
+			{
+				$addFields: {
+					distScore: {
+						$let: {
+							vars: {
+								dLat: { $abs: { $subtract: ['$lat', baseLat] } },
+								dLng: { $abs: { $subtract: ['$lng', baseLng] } },
+							},
+							in: {
+								// 서울 같은 좁은 범위에서는 이 근사치로 충분히 "가까운 순"이 나온다
+								$max: [0, { $subtract: [30, { $multiply: [500, { $add: ['$$dLat', '$$dLng'] }] }] }],
+							},
+						},
+					},
+				},
+			},
+			{
+				$addFields: {
+					starScore: {
+						$let: {
+							vars: { diff: { $abs: { $subtract: ['$propertyStars', targetProperty.propertyStars] } } },
+							in: {
+								$switch: {
+									branches: [
+										{ case: { $eq: ['$$diff', 0] }, then: 15 },
+										{ case: { $eq: ['$$diff', 1] }, then: 8 },
+										{ case: { $eq: ['$$diff', 2] }, then: 3 },
+									],
+									default: 0,
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				$addFields: {
+					amenityOverlap: {
+						$size: {
+							$setIntersection: [{ $ifNull: ['$propertyAmenities', []] }, targetProperty.propertyAmenities ?? []],
+						},
+					},
+					otherAmenityOverlap: {
+						$size: {
+							$setIntersection: [
+								{ $ifNull: ['$propertyOtherAmenities', []] },
+								targetProperty.propertyOtherAmenities ?? [],
+							],
+						},
+					},
+				},
+			},
+			{
+				$addFields: {
+					amenityScore: {
+						$add: [
+							{ $min: [20, { $multiply: ['$amenityOverlap', 2] }] }, // 기본 amenities
+							{ $min: [10, { $multiply: ['$otherAmenityOverlap', 1] }] }, // 기타 amenities
+						],
+					},
+				},
+			},
+			{
+				$addFields: {
+					similarScore: { $add: ['$distScore', '$starScore', '$amenityScore'] },
+				},
+			},
+			{ $sort: { similarScore: -1 as const } },
+			{ $limit: 12 },
+			{
+				$project: {
+					lat: 0,
+					lng: 0,
+					distScore: 0,
+					starScore: 0,
+					amenityOverlap: 0,
+					otherAmenityOverlap: 0,
+					amenityScore: 0,
+				},
+			},
+			lookupAuthMemberLiked(memberId),
+		];
+
+		const data = await this.propertyModel.aggregate(pipeline).exec();
+		return data ?? [];
+	}
+
 	/*****************
 	 **  	USER   **
 	 *****************/

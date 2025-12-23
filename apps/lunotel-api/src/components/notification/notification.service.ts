@@ -23,9 +23,17 @@ export class NotificationService {
 
 	public async updateNotification(input: NotificationUpdateInput, memberId: ObjectId): Promise<Notification> {
 		const notificationId = shapeIntoMongoObjectId(input._id);
-		const result = await this.notificationModel.findOneAndUpdate({ _id: notificationId }, input, { new: true }).exec();
+		const result = await this.notificationModel
+			.findOneAndUpdate({ _id: notificationId, memberId: memberId }, input, { new: true })
+			.exec();
 
 		if (!result) throw new BadRequestException(Message.UPDATE_FAILED);
+		return result;
+	}
+
+	public async deleteNotification(notifId: ObjectId, memberId: ObjectId): Promise<Notification> {
+		const result = await this.notificationModel.findOneAndDelete({ _id: notifId }).exec();
+		if (!result) throw new BadRequestException(Message.REMOVE_FAILED);
 		return result;
 	}
 
@@ -41,8 +49,8 @@ export class NotificationService {
 			{
 				$facet: {
 					list: [
-						{ $skip: (page - 1) * limit },
-						{ $limit: limit },
+						{ $skip: (page - 1) * (limit ?? Number.MAX_SAFE_INTEGER) },
+						{ $limit: limit ?? Number.MAX_SAFE_INTEGER },
 						{
 							$lookup: {
 								from: 'properties',
@@ -63,7 +71,6 @@ export class NotificationService {
 			},
 		]);
 
-		console.log(result[0].propertyData);
 		if (!result.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
 
 		return result[0];

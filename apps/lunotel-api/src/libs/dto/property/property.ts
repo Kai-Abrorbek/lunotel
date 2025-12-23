@@ -9,11 +9,9 @@ import {
 } from '../../enums/property.enum';
 import { Member, TotalCounter } from '../member/member';
 import { RoomType } from '../roomtype/roomtype';
-import { StayPlan } from '../stayplan/stayplan';
-import { Inventory } from '../inventory/inventory';
 import { MeLiked } from '../like/like';
 import { Reservation } from '../reservation/reservation';
-// import { MeLiked } from '../like/like';
+import { Comment } from '../comment/comment';
 
 @ObjectType()
 export class Property {
@@ -31,6 +29,15 @@ export class Property {
 
 	@Field(() => String)
 	propertyAddress: string;
+
+	@Field(() => String)
+	propertyDetailAddress: string;
+
+	@Field(() => String)
+	propertyLat: string;
+
+	@Field(() => String)
+	propertyLng: string;
 
 	@Field(() => String)
 	propertyName: string;

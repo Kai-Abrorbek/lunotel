@@ -19,6 +19,7 @@ import { WithoutGuard } from '../auth/guards/without.guard';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 @Resolver()
 export class PropertyResolver {
@@ -41,9 +42,19 @@ export class PropertyResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Properties> {
 		console.log('Query: getProperties');
-		console.log(input);
 		return await this.propertyService.getProperties(memberId, input);
 	}
+
+	@UseGuards(WithoutGuard)
+	@Query((returns) => [Property])
+	public async getSimilarProperties(
+		@Args('propertyId') propertyId: string,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Property[]> {
+		console.log('Query: getSimilarProperties');
+		return await this.propertyService.getSimilarProperties(memberId, shapeIntoMongoObjectId(propertyId));
+	}
+
 	/*****************
 	 **  	USER   **
 	 *****************/
@@ -113,6 +124,7 @@ export class PropertyResolver {
 		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
 		return await this.propertyService.getAgentProperties(memberId, input);
 	}
+
 	/*****************
 	 **  	ADMIN   **
 	 *****************/

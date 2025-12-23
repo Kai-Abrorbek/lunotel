@@ -24,6 +24,41 @@ export class RoomtypeService {
 		private readonly inventoryService: InventoryService,
 	) {}
 
+	public async getRoom(roomId: ObjectId, memberId: ObjectId): Promise<RoomType> {
+		const match: T = { _id: roomId };
+
+		const result = await this.roomTypeModel
+			.aggregate([
+				{ $match: match },
+				{
+					$lookup: {
+						from: 'stayPlan',
+						let: { roomTypeId: '$_id' },
+						pipeline: [
+							{
+								$match: {
+									$expr: { $eq: ['$roomTypeId', '$$roomTypeId'] },
+								},
+							},
+							{ $sort: { stayPlanType: 1 as const } }, // ✅ 여기서 고정
+						],
+						as: 'stayPlans',
+					},
+				},
+
+				{
+					$lookup: {
+						from: 'reservation',
+						localField: '_id',
+						foreignField: 'roomTypeId',
+						as: 'reservationData',
+					},
+				},
+			])
+			.exec();
+		return result[0];
+	}
+
 	public async createRoomType(input: RoomTypeInput, memberId: ObjectId): Promise<RoomType> {
 		try {
 			const roomTypeInput = {

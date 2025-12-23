@@ -4,6 +4,7 @@ import { RoomStatus } from '../../enums/propertyRoomtype.enum';
 import { StayPlan } from '../stayplan/stayplan';
 import { IsNotEmpty } from 'class-validator';
 import { TotalCounter } from '../member/member';
+import { Reservation } from '../reservation/reservation';
 
 @ObjectType()
 export class RoomType {
@@ -49,6 +50,9 @@ export class RoomType {
 	/* from aggregatio */
 	@Field(() => [StayPlan], { nullable: true })
 	stayPlans?: StayPlan[];
+
+	@Field(() => [Reservation], { nullable: true })
+	reservationData?: Reservation[];
 }
 
 @ObjectType()

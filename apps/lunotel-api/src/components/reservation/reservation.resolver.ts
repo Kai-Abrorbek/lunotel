@@ -18,6 +18,7 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
+import { Member } from '../../libs/dto/member/member';
 
 @Resolver()
 export class ReservationResolver {
@@ -84,5 +85,16 @@ export class ReservationResolver {
 	): Promise<Reservations> {
 		console.log('Query: getRoomReservations');
 		return await this.reservationService.getRoomReservations(input, memberId);
+	}
+
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
+	@Mutation(() => Reservation)
+	public async updateAgentReservation(
+		@Args('input') input: ReservationUpdateInput,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Reservation> {
+		input._id = shapeIntoMongoObjectId(input._id);
+		return await this.reservationService.updateAgentReservation(input, memberId);
 	}
 }

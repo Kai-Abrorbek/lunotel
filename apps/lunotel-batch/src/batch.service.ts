@@ -27,7 +27,7 @@ export class BatchService {
 			.updateMany(
 				{
 					memberStatus: MemberStatus.ACTIVE,
-					memberType: MemberType.AGENT,
+					memberType: { $ne: MemberType.ADMIN },
 				},
 				{ memberRank: 0 },
 			)

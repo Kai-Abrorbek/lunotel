@@ -46,7 +46,7 @@ const ReservationSchema = new Schema(
 		reservationStatus: {
 			type: String,
 			enum: Object.values(ReservationStatus),
-			default: ReservationStatus.PENDING,
+			default: ReservationStatus.UPCOMING,
 		},
 
 		reservationQty: {

@@ -20,6 +20,13 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 export class MemberResolver {
 	constructor(private readonly memberService: MemberService) {}
 
+	@UseGuards(AuthGuard)
+	@Query(() => Member)
+	public async me(@AuthMember('_id') memberId: ObjectId): Promise<Member> {
+		console.log('Query me');
+		return this.memberService.me(memberId);
+	}
+
 	@Mutation(() => Member)
 	public async socialLoginOrSignup(@Args('input') input: SignupInput): Promise<Member> {
 		console.log('Mutation : SocialLoginOrSignup');

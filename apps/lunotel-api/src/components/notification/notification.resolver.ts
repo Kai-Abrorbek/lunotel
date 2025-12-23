@@ -23,14 +23,23 @@ export class NotificationResolver {
 		return await this.notificationService.createNotification(input);
 	}
 
-	@UseGuards(WithoutGuard)
-	@Query(() => Notification)
+	@UseGuards(AuthGuard)
+	@Mutation(() => Notification)
 	public async updateNotification(
 		@Args('input') input: NotificationUpdateInput,
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Notification> {
 		input._id = shapeIntoMongoObjectId(input._id);
 		return await this.notificationService.updateNotification(input, memberId);
+	}
+
+	@UseGuards(AuthGuard)
+	@Mutation(() => Notification)
+	public async deleteNotification(
+		@Args('notifId') notifId: String,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Notification> {
+		return await this.notificationService.deleteNotification(shapeIntoMongoObjectId(notifId), memberId);
 	}
 
 	@UseGuards(AuthGuard)

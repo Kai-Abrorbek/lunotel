@@ -22,6 +22,7 @@ import { Property } from '../../libs/dto/property/property';
 import { NotificationType } from '../../libs/enums/notification.enum';
 import { MemberService } from '../member/member.service';
 import { ReservationStatus } from '../../libs/enums/reservation';
+import { PropertyService } from '../property/property.service';
 
 @Injectable()
 export class ReservationService {
@@ -98,10 +99,8 @@ export class ReservationService {
 						);
 					}),
 				);
-			}
 
-			if (memberId) {
-				await this.memberService.memberStatsEditor({ _id: memberId, modifier: 1, targetKey: 'memberReservations' });
+				await this.propertyModel.findByIdAndUpdate(property._id, { $inc: { propertyReservations: 1 } }, { new: true });
 			}
 
 			// SEND NOTIFICATION FOR => USER and OWNER
@@ -116,7 +115,7 @@ export class ReservationService {
 					reservationId: reservation._id,
 					propertyId: property._id,
 				};
-
+				await this.memberService.memberStatsEditor({ _id: memberId, modifier: 1, targetKey: 'memberReservations' });
 				await this.notificationService.createNotification(notificationInputForMember);
 			}
 
@@ -139,9 +138,330 @@ export class ReservationService {
 	}
 
 	public async updateReservation(input: ReservationUpdateInput, memberId: ObjectId): Promise<Reservation> {
-		const reservation: Reservation = await this.reservationModel.findOne({ _id: input._id, memberId: memberId }).exec();
+		const reservation: Reservation = await this.reservationModel.findOne({ _id: input._id }).exec();
 		if (!reservation) throw new BadRequestException(Message.NO_DATA_FOUND);
-		const property: Property = await this.propertyModel.findOne({ _id: reservation.propertyId });
+
+		const property: Property = await this.propertyModel.findOne({
+			_id: reservation.propertyId,
+		});
+
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		const roomType: RoomType = await this.roomTypeModel
+			.findOne({ _id: input.roomTypeId, propertyId: reservation.propertyId })
+			.exec();
+
+		if (!input.reservationStatus) {
+			const stayPlan: StayPlan = await this.stayPlanModel.findOne({ _id: input.stayPlanId }).exec();
+			const inventorys: Inventory[] = await this.inventoryModel.find({
+				roomTypeId: roomType._id,
+				stayPlanId: stayPlan._id,
+				inventoryDate: { $gte: input.reservationCheckIn, $lt: input.reservationCheckOut },
+				inventoryAllotment: { $gt: 0 },
+			});
+
+			if (!inventorys.length) throw new BadRequestException('해당 날짜 재고가 없습니다!');
+
+			let priceBreakdownList: ReservationPriceBreakdownInput[] = inventorys.map((inventory) => {
+				return {
+					date: inventory.inventoryDate,
+					time: input.reservationCheckInAt ?? reservation.reservationCheckInAt,
+					unitPrice: inventory.inventoryPrice === 0 ? stayPlan.stayPlanBasePrice : inventory.inventoryPrice,
+					qty: input.reservationQty ?? 1,
+					subtotal:
+						inventory.inventoryPrice === 0
+							? stayPlan.stayPlanBasePrice * (input.reservationQty ?? 1)
+							: inventory.inventoryPrice,
+				};
+			});
+
+			const reservationTotalPrice = priceBreakdownList.reduce((sum, p) => sum + p.subtotal, 0);
+
+			const updateInput: ReservationUpdateInput = {
+				_id: input._id,
+				propertyId: input.propertyId,
+				roomTypeId: roomType._id,
+				stayPlanId: stayPlan._id,
+				reservationQty: 1,
+				priceBreakdown: priceBreakdownList,
+				reservationTotalPrice: reservationTotalPrice,
+				reservationPlanType: stayPlan.stayPlanType,
+				reservationCheckIn: input.reservationCheckIn,
+				reservationCheckOut: input.reservationCheckOut,
+				reservationDate: input.reservationCheckIn,
+			};
+
+			const result: Reservation = await this.reservationModel
+				.findOneAndUpdate({ _id: reservation._id }, updateInput, { new: true })
+				.exec();
+
+			if (result) {
+				await Promise.all(
+					inventorys.map(async (inv) => {
+						await this.inventoryModel.findOneAndUpdate(
+							{ _id: inv._id, inventoryAllotment: { $gte: 1 } }, // 재고≥1 조건
+							{ $inc: { inventoryAllotment: -1 } },
+						);
+					}),
+				);
+
+				await Promise.all(
+					reservation.priceBreakdown.map(async (breakdown) => {
+						await this.inventoryModel.findOneAndUpdate(
+							{
+								roomTypeId: reservation.roomTypeId,
+								stayPlanId: reservation.stayPlanId,
+								inventoryDate: breakdown.date,
+							},
+							{ $inc: { inventoryAllotment: 1 } },
+						);
+					}),
+				);
+			}
+
+			// SEND NOTIFICATION FOR => USER and OWNER
+			if (memberId) {
+				const period = `${reservation.reservationCheckIn} ~ ${reservation.reservationCheckOut}`;
+
+				const notificationInputForMember: NotificationInput = {
+					memberId: memberId,
+					title: '예약 정보가 변경되었습니다.',
+					message: `${property.propertyName} (${roomType.roomName}) 예약 정보가 변경되었습니다.\n변경 후 기간: ${period}`,
+					type: NotificationType.RESERVATION_UPDATED_USER,
+					reservationId: reservation._id,
+					propertyId: property._id,
+				};
+
+				await this.notificationService.createNotification(notificationInputForMember);
+			}
+
+			const period = `${reservation.reservationCheckIn} ~ ${reservation.reservationCheckOut}`;
+			const notificationInputForOwner: NotificationInput = {
+				memberId: property.memberId,
+				title: '예약 정보가 변경되었습니다.',
+				message: `예약 변경: ${roomType.roomName}\n변경 후 기간: ${period}`,
+				type: NotificationType.RESERVATION_UPDATED_HOST,
+				reservationId: reservation._id,
+				propertyId: property._id,
+			};
+
+			await this.notificationService.createNotification(notificationInputForOwner);
+			return result;
+		} else {
+			const stayPlan: StayPlan = await this.stayPlanModel.findOne({ _id: input.stayPlanId }).exec();
+			const inventorys: Inventory[] = await this.inventoryModel.find({
+				roomTypeId: roomType._id,
+				stayPlanId: stayPlan._id,
+				inventoryDate: { $gte: input.reservationCheckIn, $lt: input.reservationCheckOut },
+			});
+
+			if (!inventorys.length) throw new BadRequestException('해당 날짜 재고가 없습니다!');
+
+			const result: Reservation = await this.reservationModel
+				.findOneAndUpdate({ _id: reservation._id }, input, { new: true })
+				.exec();
+
+			if (!result) throw new BadRequestException(Message.UPDATE_FAILED);
+
+			if (result) {
+				await Promise.all(
+					inventorys.map(async (inv) => {
+						await this.inventoryModel.findOneAndUpdate(
+							{ _id: inv._id, inventoryAllotment: { $gte: 1 } }, // 재고≥1 조건
+							{ $inc: { inventoryAllotment: -1 } },
+						);
+					}),
+				);
+
+				await Promise.all(
+					reservation.priceBreakdown.map(async (breakdown) => {
+						await this.inventoryModel.findOneAndUpdate(
+							{
+								roomTypeId: reservation.roomTypeId,
+								stayPlanId: reservation.stayPlanId,
+								inventoryDate: breakdown.date,
+							},
+							{ $inc: { inventoryAllotment: 1 } },
+						);
+					}),
+				);
+
+				await this.propertyModel.findByIdAndUpdate(property._id, { $inc: { propertyReservations: -1 } }, { new: true });
+			}
+
+			if (memberId) {
+				// SEND NOTIFICATION FOR => USER
+				const period = `${reservation.reservationCheckIn} ~ ${reservation.reservationCheckOut}`;
+				const notificationInputForMember: NotificationInput = {
+					memberId: memberId,
+					title: '예약이 취소되었습니다.',
+					message: `${property.propertyName} (${roomType.roomName}) 예약이 취소 되었습니다.\n취소 후 기간: ${period}`,
+					type: NotificationType.RESERVATION_CANCELED_USER,
+					reservationId: reservation._id,
+					propertyId: property._id,
+				};
+				await this.memberService.memberStatsEditor({ _id: memberId, modifier: -1, targetKey: 'memberReservations' });
+				await this.notificationService.createNotification(notificationInputForMember);
+			}
+
+			// SEND NOTIFICATION FOR => OWNER
+			const period = `${reservation.reservationCheckIn} ~ ${reservation.reservationCheckOut}`;
+			const notificationInputForOwner: NotificationInput = {
+				memberId: property.memberId,
+				title: '예약이 취소되었습니다.',
+				message: `예약 취소: ${roomType.roomName}\n취소 후 기간: ${period}`,
+				type: NotificationType.RESERVATION_CANCELED_HOST,
+				reservationId: reservation._id,
+				propertyId: property._id,
+			};
+
+			await this.notificationService.createNotification(notificationInputForOwner);
+
+			return result;
+		}
+	}
+
+	public async getMyReservation(input: NoAuthMemberInfoInput, memberId: ObjectId): Promise<Reservation> {
+		const result = await this.reservationModel.findOne({
+			_id: input.reservationNumber,
+			memberId: memberId,
+			'memberInfo.guestPhone': input.guestPhone,
+		});
+
+		if (!result) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		return result;
+	}
+
+	public async getMyReservations(input: ReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
+		const { page, limit, search } = input;
+		const match: T = { memberId: memberId };
+
+		if (search.propertyId) match.propertyId = shapeIntoMongoObjectId(search.propertyId);
+		const data = await this.reservationModel.aggregate([
+			{ $match: match },
+			{ $sort: { createdAt: 1 } },
+			{
+				$facet: {
+					list: [
+						{ $skip: (page - 1) * limit },
+						{ $limit: limit },
+						{
+							$lookup: {
+								from: 'properties',
+								localField: 'propertyId',
+								foreignField: '_id',
+								as: 'propertyData',
+							},
+						},
+					],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
+
+		return data[0];
+	}
+	/*****************
+	 **  	AGENT   **
+	 *****************/
+	public async getAgentReservations(input: ReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
+		const { page, limit, search } = input;
+		const propertyId = shapeIntoMongoObjectId(input.search.propertyId);
+		const property: Property = await this.propertyModel.findOne({ _id: propertyId, memberId: memberId }).exec();
+
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+		const match: T = {};
+		const sort: T = { [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC };
+		if (search.propertyId) match.propertyId = propertyId;
+
+		const data = await this.reservationModel.aggregate([
+			{ $match: match },
+			{ $sort: sort },
+			{
+				$facet: {
+					list: [
+						{ $skip: (page - 1) * limit },
+						{ $limit: limit },
+						{
+							$lookup: {
+								from: 'properties',
+								localField: 'propertyId',
+								foreignField: '_id',
+								as: 'propertyData',
+							},
+						},
+						{
+							$lookup: {
+								from: 'roomType',
+								localField: 'roomTypeId',
+								foreignField: '_id',
+								as: 'roomData',
+							},
+						},
+					],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
+
+		return data[0];
+	}
+
+	public async getRoomReservations(input: RoomReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
+		const propertyId = shapeIntoMongoObjectId(input.propertyId);
+
+		const property: Property = await this.propertyModel.findOne({ _id: propertyId, memberId: memberId }).exec();
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		const match: T = {
+			propertyId: propertyId,
+			roomTypeId: shapeIntoMongoObjectId(input.roomTypeId),
+			stayPlanId: shapeIntoMongoObjectId(input.stayPlanId),
+		};
+
+		const data = await this.reservationModel.aggregate([
+			{ $match: match },
+			{ $sort: { createdAt: -1 } },
+			{
+				$facet: {
+					list: [
+						{
+							$lookup: {
+								from: 'properties',
+								localField: 'propertyId',
+								foreignField: '_id',
+								as: 'propertyData',
+							},
+						},
+					],
+					metaCounter: [{ $count: 'total' }],
+				},
+			},
+		]);
+
+		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
+
+		return data[0];
+	}
+
+	public async updateAgentReservation(input: ReservationUpdateInput, memberId: ObjectId): Promise<Reservation> {
+		const property: Property = await this.propertyModel.findOne({
+			_id: shapeIntoMongoObjectId(input.propertyId),
+			memberId: memberId,
+		});
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		const reservation: Reservation = await this.reservationModel
+			.findOne({ _id: input._id, propertyId: property._id })
+			.exec();
+
+		if (!reservation) throw new BadRequestException(Message.NO_DATA_FOUND);
+
 		const roomType: RoomType = await this.roomTypeModel
 			.findOne({ _id: input.roomTypeId, propertyId: reservation.propertyId })
 			.exec();
@@ -285,125 +605,5 @@ export class ReservationService {
 
 			return result;
 		}
-	}
-
-	public async getMyReservation(input: NoAuthMemberInfoInput, memberId: ObjectId): Promise<Reservation> {
-		const result = await this.reservationModel.findOne({
-			_id: input.reservationNumber,
-			memberId: memberId,
-			'memberInfo.guestPhone': input.guestPhone,
-		});
-
-		if (!result) throw new BadRequestException(Message.NO_DATA_FOUND);
-
-		return result;
-	}
-
-	public async getMyReservations(input: ReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
-		const { page, limit, search } = input;
-		const match: T = { memberId: memberId };
-
-		if (search.propertyId) match.propertyId = shapeIntoMongoObjectId(search.propertyId);
-		const data = await this.reservationModel.aggregate([
-			{ $match: match },
-			{ $sort: { createdAt: 1 } },
-			{
-				$facet: {
-					list: [
-						{ $skip: (page - 1) * limit },
-						{ $limit: limit },
-						{
-							$lookup: {
-								from: 'properties',
-								localField: 'propertyId',
-								foreignField: '_id',
-								as: 'propertyData',
-							},
-						},
-					],
-					metaCounter: [{ $count: 'total' }],
-				},
-			},
-		]);
-
-		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
-
-		return data[0];
-	}
-	/*****************
-	 **  	AGENT   **
-	 *****************/
-	public async getAgentReservations(input: ReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
-		const { page, limit, search } = input;
-		const propertyId = shapeIntoMongoObjectId(input.search.propertyId);
-		const property: Property = await this.propertyModel.findOne({ _id: propertyId, memberId: memberId }).exec();
-
-		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
-		const match: T = {};
-		const sort: T = { [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC };
-		if (search.propertyId) match.propertyId = propertyId;
-
-		const data = await this.reservationModel.aggregate([
-			{ $match: match },
-			{ $sort: sort },
-			{
-				$facet: {
-					list: [
-						{ $skip: (page - 1) * limit },
-						{ $limit: limit },
-						{
-							$lookup: {
-								from: 'properties',
-								localField: 'propertyId',
-								foreignField: '_id',
-								as: 'propertyData',
-							},
-						},
-					],
-					metaCounter: [{ $count: 'total' }],
-				},
-			},
-		]);
-
-		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
-
-		return data[0];
-	}
-
-	public async getRoomReservations(input: RoomReservationsInquiry, memberId: ObjectId): Promise<Reservations> {
-		const propertyId = shapeIntoMongoObjectId(input.propertyId);
-
-		const property: Property = await this.propertyModel.findOne({ _id: propertyId, memberId: memberId }).exec();
-		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
-
-		const match: T = {
-			propertyId: propertyId,
-			roomTypeId: shapeIntoMongoObjectId(input.roomTypeId),
-			stayPlanId: shapeIntoMongoObjectId(input.stayPlanId),
-		};
-
-		const data = await this.reservationModel.aggregate([
-			{ $match: match },
-			{ $sort: { createdAt: -1 } },
-			{
-				$facet: {
-					list: [
-						{
-							$lookup: {
-								from: 'properties',
-								localField: 'propertyId',
-								foreignField: '_id',
-								as: 'propertyData',
-							},
-						},
-					],
-					metaCounter: [{ $count: 'total' }],
-				},
-			},
-		]);
-
-		if (!data.length) throw new BadGatewayException(Message.NO_DATA_FOUND);
-
-		return data[0];
 	}
 }

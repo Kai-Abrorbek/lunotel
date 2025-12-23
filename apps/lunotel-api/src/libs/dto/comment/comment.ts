@@ -18,6 +18,12 @@ export class Comment {
 	@Field(() => String)
 	commentContent: string;
 
+	@Field(() => [String])
+	commentImages: string[];
+
+	@Field(() => Int)
+	commentRating: number;
+
 	@Field(() => String)
 	commentRefId: ObjectId;
 
