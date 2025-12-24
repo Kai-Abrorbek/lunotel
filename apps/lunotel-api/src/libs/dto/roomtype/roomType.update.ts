@@ -1,13 +1,13 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { IsInt, IsNotEmpty, IsOptional, Length } from 'class-validator';
 import { ObjectId } from 'mongoose';
-import { RoomStatus } from '../../enums/propertyRoomtype.enum';
+import { RoomAmenity, RoomStatus } from '../../enums/propertyRoomtype.enum';
 
 @InputType()
 export class SPRules {
 	@IsOptional()
-	@Field(() => Int, { nullable: true })
-	durationHours?: number;
+	@Field(() => String, { nullable: true })
+	durationHours?: string;
 
 	@IsNotEmpty()
 	@Field(() => String, { nullable: true })
@@ -62,17 +62,12 @@ export class RoomTypeUpdate {
 	roomDiscountPrice?: number;
 
 	@IsOptional()
-	@Length(5, 100)
-	@Field(() => String, { nullable: true })
-	roombedInfo?: string;
+	@Field(() => [String], { nullable: true })
+	roomImages?: string[];
 
 	@IsOptional()
-	@Field(() => [String], { nullable: true })
-	roomAmenities?: [string];
-
-	@IsOptional()
-	@Field(() => [String], { nullable: true })
-	roomImages?: [string];
+	@Field(() => [RoomAmenity], { nullable: true })
+	roomAmenities?: RoomAmenity[];
 
 	@IsOptional()
 	@Field(() => RoomStatus, { nullable: true })

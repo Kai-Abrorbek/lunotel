@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { RoomStatus } from '../libs/enums/propertyRoomtype.enum';
+import { RoomAmenity, RoomStatus } from '../libs/enums/propertyRoomtype.enum';
 
 const RoomTypeSchema = new Schema(
 	{
@@ -51,10 +51,16 @@ const RoomTypeSchema = new Schema(
 			required: true,
 		},
 
+		roomAmenities: {
+			type: [String],
+			enum: Object.values(RoomAmenity),
+			required: true,
+		},
+
 		roomStatus: {
 			type: String,
 			enum: Object.values(RoomStatus),
-			default: RoomStatus.MAINTENANCE,
+			default: RoomStatus.AVAILABLE,
 		},
 	},
 	{ timestamps: true, collection: 'roomType' },

@@ -3,13 +3,13 @@ import { IsIn, IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validato
 import { ObjectId } from 'mongoose';
 import { availablePropertySorts } from '../../config';
 import { Direction } from '../../enums/common.enum';
-import { RoomStatus } from '../../enums/propertyRoomtype.enum';
+import { RoomAmenity, RoomStatus } from '../../enums/propertyRoomtype.enum';
 
 @InputType()
 export class STPRules {
 	@IsOptional()
-	@Field(() => Int, { nullable: true })
-	durationHours: number;
+	@Field(() => String, { nullable: true })
+	durationHours: string;
 
 	@IsNotEmpty()
 	@Field(() => String)
@@ -66,9 +66,17 @@ export class RoomTypeInput {
 	@Field(() => String, { nullable: true })
 	roombedInfo?: String;
 
+	@IsOptional()
+	@Field(() => RoomStatus, { nullable: true })
+	roomStatus?: RoomStatus;
+
 	@IsNotEmpty()
 	@Field(() => [String])
-	roomImages: [String];
+	roomImages: string[];
+
+	@IsNotEmpty()
+	@Field(() => [RoomAmenity])
+	roomAmenities: RoomAmenity[];
 
 	@IsNotEmpty()
 	@Field(() => STPRules)

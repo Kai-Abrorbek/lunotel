@@ -70,6 +70,8 @@ export class RoomtypeService {
 				basePriceOvernight: input.basePriceOvernight,
 				roomImages: input.roomImages,
 				roomDiscountPrice: input.roomDiscountPrice ?? 0,
+				roomAmenities: input.roomAmenities,
+				roomStatus: input.roomStatus,
 			};
 
 			const roomType = await this.roomTypeModel.create(roomTypeInput);
@@ -115,6 +117,7 @@ export class RoomtypeService {
 			propertyId: shapeIntoMongoObjectId(input.propertyId),
 		};
 
+		console.log(search);
 		const result = await this.roomTypeModel.findOneAndUpdate(search, input, { new: true }).exec();
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 
@@ -150,6 +153,14 @@ export class RoomtypeService {
 								localField: '_id',
 								foreignField: 'roomTypeId',
 								as: 'stayPlans',
+							},
+						},
+						{
+							$lookup: {
+								from: 'reservation',
+								localField: '_id',
+								foreignField: 'roomTypeId',
+								as: 'reservationData',
 							},
 						},
 					],

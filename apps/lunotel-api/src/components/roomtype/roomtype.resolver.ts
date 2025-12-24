@@ -37,7 +37,7 @@ export class RoomtypeResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<RoomType> {
 		console.log('Mutation : createRoomType');
-
+		console.log(input);
 		return await this.roomTypeService.createRoomType(input, memberId);
 	}
 

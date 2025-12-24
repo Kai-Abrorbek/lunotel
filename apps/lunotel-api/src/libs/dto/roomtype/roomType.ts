@@ -1,10 +1,24 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
-import { RoomStatus } from '../../enums/propertyRoomtype.enum';
+import { RoomAmenity, RoomStatus } from '../../enums/propertyRoomtype.enum';
 import { StayPlan } from '../stayplan/stayplan';
-import { IsNotEmpty } from 'class-validator';
 import { TotalCounter } from '../member/member';
 import { Reservation } from '../reservation/reservation';
+
+@ObjectType()
+export class SRules {
+	@Field(() => String, { nullable: true })
+	durationHours: string;
+
+	@Field(() => String)
+	windowStart: string;
+
+	@Field(() => String)
+	windowEnd: string;
+
+	@Field(() => String)
+	lastCheckInBy: string;
+}
 
 @ObjectType()
 export class RoomType {
@@ -32,11 +46,11 @@ export class RoomType {
 	@Field(() => Number, { nullable: true })
 	roomDiscountPrice: number;
 
-	@Field(() => String)
-	roombedInfo: string;
-
 	@Field(() => [String])
-	roomImages: [string];
+	roomImages: string[];
+
+	@Field(() => [RoomAmenity], { nullable: true })
+	roomAmenities?: RoomAmenity[];
 
 	@Field(() => RoomStatus)
 	roomStatus: RoomStatus;
