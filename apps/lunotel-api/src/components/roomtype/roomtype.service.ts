@@ -117,7 +117,6 @@ export class RoomtypeService {
 			propertyId: shapeIntoMongoObjectId(input.propertyId),
 		};
 
-		console.log(search);
 		const result = await this.roomTypeModel.findOneAndUpdate(search, input, { new: true }).exec();
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 

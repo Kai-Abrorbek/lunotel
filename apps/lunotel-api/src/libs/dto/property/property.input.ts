@@ -71,6 +71,11 @@ export class PropertyInput {
 	@Field(() => String, { nullable: true })
 	propertyDesc?: string;
 
+	@IsOptional()
+	@IsBoolean()
+	@Field(() => Boolean, { nullable: true })
+	soldAt?: boolean;
+
 	memberId?: ObjectId;
 }
 

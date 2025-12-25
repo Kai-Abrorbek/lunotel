@@ -86,15 +86,4 @@ export class ReservationResolver {
 		console.log('Query: getRoomReservations');
 		return await this.reservationService.getRoomReservations(input, memberId);
 	}
-
-	@Roles(MemberType.AGENT)
-	@UseGuards(RolesGuard)
-	@Mutation(() => Reservation)
-	public async updateAgentReservation(
-		@Args('input') input: ReservationUpdateInput,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Reservation> {
-		input._id = shapeIntoMongoObjectId(input._id);
-		return await this.reservationService.updateAgentReservation(input, memberId);
-	}
 }

@@ -320,7 +320,7 @@ export class PropertyService {
 		const search: T = {
 			_id: input._id,
 			memberId: memberId,
-			propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
+			// propertyStatus: { $in: [PropertyStatus.DRAFT, PropertyStatus.ACTIVE] },
 		};
 
 		if (propertyStatus === PropertyStatus.DELETE) input.deletedAt = new Date();
