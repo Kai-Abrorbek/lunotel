@@ -9,7 +9,7 @@ import { Direction, Message } from '../../libs/enums/common.enum';
 import { CommentGroup, CommentStatus } from '../../libs/enums/comment.enum';
 import { CommentUpdate } from '../../libs/dto/comment/comment.update';
 import { T } from '../../libs/types/common';
-import { lookupMember } from '../../libs/config';
+import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
 
 @Injectable()
 export class CommentService {
@@ -72,9 +72,11 @@ export class CommentService {
 
 	public async getComments(memebrId: ObjectId, input: CommentsInquiry): Promise<Comments> {
 		const { commentRefId } = input.search;
-		const match: T = { commentRefId: commentRefId, commentStatus: CommentStatus.ACTIVE };
+		const match: T = { commentRefId: shapeIntoMongoObjectId(commentRefId), commentStatus: CommentStatus.ACTIVE };
 		const sort: T = { [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC };
+		// console.log(await this.commentModel.find({ commentRefId: commentRefId }));
 
+		console.log(match);
 		const result: Comments[] = await this.commentModel
 			.aggregate([
 				{ $match: match },
@@ -85,7 +87,7 @@ export class CommentService {
 							{ $skip: (input.page - 1) * input.limit },
 							{ $limit: input.limit },
 							lookupMember,
-							{ $unwind: '$memberData' },
+							{ $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
 							{
 								$lookup: {
 									from: 'roomType',
@@ -94,7 +96,7 @@ export class CommentService {
 									as: 'roomDate',
 								},
 							},
-							{ $unwind: '$roomDate' },
+							{ $unwind: { path: '$roomDate', preserveNullAndEmptyArrays: true } },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
