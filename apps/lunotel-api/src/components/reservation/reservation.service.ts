@@ -10,7 +10,6 @@ import {
 	RoomReservationsInquiry,
 } from '../../libs/dto/reservation/reservation.input';
 import { Direction, Message } from '../../libs/enums/common.enum';
-import { RoomType } from '../../libs/dto/roomtype/roomtype';
 import { Inventory } from '../../libs/dto/inventory/inventory';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { StayPlan } from '../../libs/dto/stayplan/stayplan';
@@ -21,8 +20,7 @@ import { NotificationInput } from '../../libs/dto/notification/notification.inpu
 import { Property } from '../../libs/dto/property/property';
 import { NotificationType } from '../../libs/enums/notification.enum';
 import { MemberService } from '../member/member.service';
-import { ReservationStatus } from '../../libs/enums/reservation';
-import { PropertyService } from '../property/property.service';
+import { RoomType } from '../../libs/dto/roomtype/roomtype';
 
 @Injectable()
 export class ReservationService {

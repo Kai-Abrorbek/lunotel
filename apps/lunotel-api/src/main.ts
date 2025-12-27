@@ -17,6 +17,6 @@ async function bootstrap() {
 	app.use('/uploads', express.static('./uploads'));
 	app.use('/public', express.static('./public'));
 	app.useWebSocketAdapter(new WsAdapter(app));
-	await app.listen(process.env.PORT_API ?? 3001);
+	await app.listen(process.env.PORT_API ?? 3001, '0.0.0.0');
 }
 bootstrap();

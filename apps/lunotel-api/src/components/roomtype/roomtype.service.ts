@@ -4,15 +4,14 @@ import { Model, ObjectId } from 'mongoose';
 import { RoomType, RoomTypes } from '../../libs/dto/roomtype/roomtype';
 import { RoomsIquiry, RoomTypeInput } from '../../libs/dto/roomtype/roomtype.input';
 import { PropertyService } from '../property/property.service';
-import { RoomTypeUpdate } from '../../libs/dto/roomtype/roomtype.update';
 import { T } from '../../libs/types/common';
 import { shapeIntoMongoObjectId } from '../../libs/config';
-import { RoomStatus } from '../../libs/enums/propertyRoomtype.enum';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import { StayplanService } from '../stayplan/stayplan.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { Property } from '../../libs/dto/property/property';
+import { RoomTypeUpdate } from '../../libs/dto/roomtype/roomtype.update';
 
 @Injectable()
 export class RoomtypeService {
