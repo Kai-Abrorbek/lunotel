@@ -19,7 +19,7 @@ interface InfoPayload {
 	action: string;
 }
 
-@WebSocketGateway({ transports: ['websocket'], secure: false })
+@WebSocketGateway({ path: '/ws' })
 export class SocketGateway implements OnGatewayInit {
 	constructor(private authService: AuthService) {}
 
