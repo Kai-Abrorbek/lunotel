@@ -26,6 +26,11 @@ const CommentSchema = new Schema(
 			required: true,
 		},
 
+		commentResponse: {
+			type: String,
+			default: '',
+		},
+
 		commentImages: {
 			type: [String],
 			default: [],

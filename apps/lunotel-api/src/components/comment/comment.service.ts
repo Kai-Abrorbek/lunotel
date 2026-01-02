@@ -90,13 +90,25 @@ export class CommentService {
 							{ $unwind: { path: '$memberData', preserveNullAndEmptyArrays: true } },
 							{
 								$lookup: {
-									from: 'roomType',
+									from: 'reservation',
 									localField: 'commentTargetId',
 									foreignField: '_id',
-									as: 'roomDate',
+									as: 'reservation',
+									pipeline: [
+										{
+											$lookup: {
+												from: 'roomType',
+												localField: 'roomTypeId', // ✅ reservation 문서의 필드
+												foreignField: '_id',
+												as: 'roomData',
+											},
+										},
+										{ $unwind: { path: '$roomData', preserveNullAndEmptyArrays: true } }, // ✅ 내부에서 처리
+									],
 								},
 							},
-							{ $unwind: { path: '$roomDate', preserveNullAndEmptyArrays: true } },
+							{ $unwind: { path: '$reservation', preserveNullAndEmptyArrays: true } },
+							{ $addFields: { roomData: '$reservation.roomData' } },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
