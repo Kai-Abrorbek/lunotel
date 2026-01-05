@@ -24,7 +24,7 @@ interface OnlineUsersPayload {
 	at: number;
 }
 
-@WebSocketGateway({ transports: ['websocket'] })
+@WebSocketGateway({ path: '/ws' })
 export class SupportGateway implements OnGatewayInit {
 	constructor(private authService: AuthService) {}
 
