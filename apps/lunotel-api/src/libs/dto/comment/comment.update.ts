@@ -14,6 +14,10 @@ export class CommentUpdate {
 	commentStatus?: CommentStatus;
 
 	@IsOptional()
+	@Field(() => String, { nullable: true })
+	commentResponse?: string;
+
+	@IsOptional()
 	@Length(1, 500)
 	@Field(() => String, { nullable: true })
 	commentContent?: string;

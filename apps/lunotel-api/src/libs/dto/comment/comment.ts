@@ -3,6 +3,8 @@ import { ObjectId } from 'mongoose';
 import { CommentGroup, CommentStatus } from '../../enums/comment.enum';
 import { Member, TotalCounter } from '../member/member';
 import { RoomType } from '../roomtype/roomtype';
+import { Reservation } from '../reservation/reservation';
+import { truncate } from 'fs';
 
 @ObjectType()
 export class Comment {
@@ -17,6 +19,9 @@ export class Comment {
 
 	@Field(() => String)
 	commentContent: string;
+
+	@Field(() => String, { nullable: true })
+	commentResponse?: string;
 
 	@Field(() => [String])
 	commentImages: string[];
@@ -42,7 +47,7 @@ export class Comment {
 	memberData?: Member;
 
 	@Field(() => RoomType, { nullable: true })
-	roomDate?: RoomType;
+	roomData?: RoomType;
 }
 
 @ObjectType()
