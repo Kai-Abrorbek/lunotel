@@ -36,3 +36,12 @@ export class InventoryInput {
 	@Field(() => InventoryStatus, { nullable: true })
 	inventoryStatus?: InventoryStatus;
 }
+
+@InputType()
+export class CreateInventoryAdminInput {
+	@Field()
+	roomTypeId: string;
+
+	@Field(() => [String])
+	stayPlanList: string[];
+}

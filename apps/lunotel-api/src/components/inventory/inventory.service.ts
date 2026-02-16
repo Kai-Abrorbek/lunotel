@@ -12,11 +12,15 @@ import { Message } from '../../libs/enums/common.enum';
 
 @Injectable()
 export class InventoryService {
-	constructor(@InjectModel('Inventory') private readonly inventoryModel: Model<Inventory>) {}
+	constructor(
+		@InjectModel('Inventory') private readonly inventoryModel: Model<Inventory>,
+		@InjectModel('RoomType') private readonly roomTypeModel: Model<RoomType>,
+		@InjectModel('StayPlan') private readonly stayPlanModel: Model<StayPlan>,
+	) {}
 
 	public async createInventorys(roomType: RoomType, stayPlans: StayPlan[]): Promise<void> {
 		try {
-			const dates = getNextMonthsDates(1); // parametr => 몇개월치
+			const dates = getNextMonthsDates(12); // parametr => 몇개월치
 			const roomTypeId = shapeIntoMongoObjectId(roomType._id);
 			for (const plan of stayPlans) {
 				await this.inventoryModel.bulkWrite(
@@ -62,5 +66,56 @@ export class InventoryService {
 
 		if (!targetInventory) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 		return targetInventory;
+	}
+
+	public async createInventorysByAdmin(): Promise<void> {
+		try {
+			const dates = getNextMonthsDates(12);
+
+			const rooms = await this.roomTypeModel.find().select('_id').lean();
+
+			// room별 stayPlan을 가져오되, 결과를 [{roomId, plans[]}] 형태로 맞춤
+			const roomPlans = await Promise.all(
+				rooms.map(async (room) => {
+					const plans = await this.stayPlanModel.find({ roomTypeId: room._id }).select('_id stayPlanBasePrice').lean();
+					return { roomId: room._id, plans };
+				}),
+			);
+
+			const ops = [];
+
+			for (const rp of roomPlans) {
+				for (const plan of rp.plans) {
+					for (const date of dates) {
+						ops.push({
+							updateOne: {
+								filter: {
+									roomTypeId: rp.roomId,
+									stayPlanId: plan._id,
+									inventoryDate: date,
+								},
+								update: {
+									$setOnInsert: {
+										roomTypeId: rp.roomId,
+										stayPlanId: plan._id,
+										inventoryDate: date,
+										inventoryAllotment: 1,
+										inventoryStatus: InventoryStatus.OPEN,
+										inventoryPrice: plan.stayPlanBasePrice,
+									},
+								},
+								upsert: true,
+							},
+						});
+					}
+				}
+			}
+
+			if (ops.length) {
+				await this.inventoryModel.bulkWrite(ops, { ordered: false });
+			}
+		} catch (err) {
+			throw new InternalServerErrorException(Message.CREATE_FAILED);
+		}
 	}
 }
