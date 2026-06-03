@@ -67,5 +67,6 @@ const RoomTypeSchema = new Schema(
 );
 
 RoomTypeSchema.index({ roomName: 1, roombasePrice: 1 }, { unique: true });
-
+RoomTypeSchema.index({ propertyId: 1 });
+RoomTypeSchema.index({ propertyId: 1, roomMaxPersonal: 1 });
 export default RoomTypeSchema;

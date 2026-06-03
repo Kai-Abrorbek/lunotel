@@ -109,11 +109,7 @@ export class PropertyService {
 							lookupMember,
 							{ $unwind: '$memberData' },
 						],
-						metaCounter: [
-							lookupRoomsForProperties(input),
-							{ $match: { $expr: { $gt: [{ $size: '$rooms' }, 0] } } },
-							{ $count: 'total' },
-						],
+						metaCounter: [{ $count: 'total' }],
 					},
 				},
 			])

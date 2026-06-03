@@ -126,5 +126,8 @@ const PropertySchema = new Schema(
 );
 
 PropertySchema.index({ propertyType: 1, propertyLocation: 1, propertyName: 1 }, { unique: true });
-
+PropertySchema.index({ propertyStatus: 1, propertyType: 1 });
+PropertySchema.index({ propertyStatus: 1, propertyLikes: -1 });
+PropertySchema.index({ propertyStatus: 1, createdAt: -1 });
+PropertySchema.index({ propertyStatus: 1, propertyLocation: 1 });
 export default PropertySchema;

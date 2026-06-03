@@ -39,4 +39,7 @@ const StayPlanSchema = new Schema(
 	{ timestamps: true, collection: 'stayPlan' },
 );
 
+StayPlanSchema.index({ roomTypeId: 1 });
+StayPlanSchema.index({ roomTypeId: 1, stayPlanstatus: 1 });
+
 export default StayPlanSchema;
