@@ -42,13 +42,19 @@ export class BatchService {
 			})
 			.exec();
 
-		const promisedList = properties.map(async (ele: Property) => {
+		const bulkOps = properties.map((ele: Property) => {
 			const { _id, propertyViews, propertyLikes, propertyReservations } = ele;
 			const rank = propertyLikes * 2 + propertyViews * 1 + propertyReservations * 5;
-			return await this.propertyModel.findByIdAndUpdate(_id, { propertyRank: rank });
+			return {
+				updateOne: {
+					filter: { _id },
+					update: { $set: { propertyRank: rank } },
+				},
+			};
 		});
-
-		await Promise.all(promisedList);
+		if (bulkOps.length > 0) {
+			await this.propertyModel.bulkWrite(bulkOps);
+		}
 	}
 
 	public async batchTopAgents(): Promise<void> {
@@ -60,13 +66,19 @@ export class BatchService {
 			})
 			.exec();
 
-		const promisedList = members.map(async (ele) => {
+		const bulkOps = members.map((ele) => {
 			const { _id, memberProperties, memberComments, memberReservations } = ele;
 			const rank = memberProperties * 5 + memberComments * 3 + memberReservations * 2;
-			return await this.memberModel.findByIdAndUpdate(_id, { memberRank: rank }).exec();
+			return {
+				updateOne: {
+					filter: { _id },
+					update: { $set: { memberRank: rank } },
+				},
+			};
 		});
-
-		await Promise.all(promisedList);
+		if (bulkOps.length > 0) {
+			await this.memberModel.bulkWrite(bulkOps);
+		}
 	}
 
 	public getHello(): string {
