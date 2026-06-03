@@ -305,7 +305,7 @@ export class PropertyService {
 			}
 
 			return result;
-		} catch (err) {
+		} catch (err: any) {
 			console.log('ERROR, createProperty: ', err.message);
 			throw new InternalServerErrorException(Message.CREATE_FAILED);
 		}
